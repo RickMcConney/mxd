@@ -16,6 +16,48 @@
         "env": []
     },
     {
+        "id": "46e2b46aee92bd4c",
+        "type": "subflow",
+        "name": "Credentials",
+        "info": "",
+        "category": "",
+        "in": [
+            {
+                "x": 50,
+                "y": 100,
+                "wires": [
+                    {
+                        "id": "7e21b484db49ff50"
+                    }
+                ]
+            }
+        ],
+        "out": [
+            {
+                "x": 290,
+                "y": 100,
+                "wires": [
+                    {
+                        "id": "7e21b484db49ff50",
+                        "port": 0
+                    }
+                ]
+            }
+        ],
+        "env": [
+            {
+                "name": "Username",
+                "type": "cred"
+            },
+            {
+                "name": "Password",
+                "type": "cred"
+            }
+        ],
+        "meta": {},
+        "color": "#DDAA99"
+    },
+    {
         "id": "7c3ae8806aa3856f",
         "type": "serial-port",
         "serialport": "/dev/ttyACM0",
@@ -33,6 +75,33 @@
         "out": "char",
         "addchar": "",
         "responsetimeout": "10000"
+    },
+    {
+        "id": "7e21b484db49ff50",
+        "type": "function",
+        "z": "46e2b46aee92bd4c",
+        "name": "",
+        "func": "msg.username = env.get(\"Username\");\nmsg.password = env.get(\"Password\");\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 180,
+        "y": 100,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "c48617baed8e6eb2",
+        "type": "comment",
+        "z": "46e2b46aee92bd4c",
+        "name": "",
+        "info": "Go to \"edit properties\" in the flow menu to add enviroment variables. Don't forget to expand a variable to set the option \"input type\" to credentials.",
+        "x": 90,
+        "y": 40,
+        "wires": []
     },
     {
         "id": "1e2997ff0f3c3dbc",
@@ -79,7 +148,7 @@
         "wires": [
             [
                 "1e2997ff0f3c3dbc",
-                "446d8e055de29cd4"
+                "0805d534663de5df"
             ]
         ]
     },
@@ -2297,85 +2366,58 @@
         ]
     },
     {
-        "id": "446d8e055de29cd4",
-        "type": "file in",
+        "id": "20766949b8b7a6e0",
+        "type": "comment",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Version 4",
+        "info": "",
+        "x": 560,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "0805d534663de5df",
+        "type": "subflow:46e2b46aee92bd4c",
         "z": "f15c4f24f8bcd86b",
         "name": "",
-        "filename": "config.json",
-        "filenameType": "str",
-        "format": "utf8",
-        "chunk": false,
-        "sendError": false,
-        "encoding": "none",
-        "allProps": false,
+        "env": [
+            {
+                "name": "Username",
+                "type": "cred"
+            },
+            {
+                "name": "Password",
+                "type": "cred"
+            },
+            {
+                "name": "Test",
+                "type": "cred"
+            }
+        ],
         "x": 350,
         "y": 160,
         "wires": [
             [
-                "07fef63d6d87ec96"
+                "6735da9516c0a6d0"
             ]
         ]
     },
     {
-        "id": "07fef63d6d87ec96",
-        "type": "json",
-        "z": "f15c4f24f8bcd86b",
-        "name": "",
-        "property": "payload",
-        "action": "",
-        "pretty": false,
-        "x": 550,
-        "y": 160,
-        "wires": [
-            [
-                "5ca5726f592323ab"
-            ]
-        ]
-    },
-    {
-        "id": "5ca5726f592323ab",
+        "id": "6735da9516c0a6d0",
         "type": "function",
         "z": "f15c4f24f8bcd86b",
         "name": "save",
-        "func": "context.global.userid = msg.payload.userid;\ncontext.global.password = msg.payload.password;\nreturn msg;",
+        "func": "context.global.userid = msg.username;\ncontext.global.password = msg.password;\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 710,
+        "x": 530,
         "y": 160,
         "wires": [
-            [
-                "42d20916589a11a7"
-            ]
+            []
         ]
-    },
-    {
-        "id": "42d20916589a11a7",
-        "type": "debug",
-        "z": "f15c4f24f8bcd86b",
-        "name": "debug 3",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 880,
-        "y": 160,
-        "wires": []
-    },
-    {
-        "id": "20766949b8b7a6e0",
-        "type": "comment",
-        "z": "f15c4f24f8bcd86b",
-        "name": "Version 3",
-        "info": "",
-        "x": 560,
-        "y": 60,
-        "wires": []
     },
     {
         "id": "42957c37084c9cdf",
