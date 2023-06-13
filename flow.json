@@ -2368,113 +2368,14 @@
         "wires": []
     },
     {
-        "id": "2b8bc4a556aec265",
-        "type": "exec",
+        "id": "20766949b8b7a6e0",
+        "type": "comment",
         "z": "f15c4f24f8bcd86b",
-        "command": "",
-        "addpay": "payload",
-        "append": "",
-        "useSpawn": "false",
-        "timer": "",
-        "winHide": false,
-        "oldrc": false,
-        "name": "",
-        "x": 530,
-        "y": 2440,
-        "wires": [
-            [
-                "6ab79b2d8f6f7a0f"
-            ],
-            [
-                "6ab79b2d8f6f7a0f"
-            ],
-            [
-                "6ab79b2d8f6f7a0f"
-            ]
-        ]
-    },
-    {
-        "id": "917cc7dfcd642779",
-        "type": "inject",
-        "z": "f15c4f24f8bcd86b",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 140,
-        "y": 2440,
-        "wires": [
-            [
-                "025e472773137fdb"
-            ]
-        ]
-    },
-    {
-        "id": "6ab79b2d8f6f7a0f",
-        "type": "function",
-        "z": "f15c4f24f8bcd86b",
-        "name": "function 3",
-        "func": "let reply = context.global.reply[msg._msgid]||\"\";\nif(typeof msg.payload === 'string')\n    reply+=msg.payload;\n\ncontext.global.reply[msg._msgid] = reply;\n\nif(msg.payload.code !== undefined)\n{\n    msg.payload = reply;\n    delete context.global.reply[msg._msgid];\n    return msg;\n}\n\nreturn null;",
-        "outputs": 1,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 700,
-        "y": 2440,
-        "wires": [
-            [
-                "368ac7271ee5d153"
-            ]
-        ]
-    },
-    {
-        "id": "368ac7271ee5d153",
-        "type": "debug",
-        "z": "f15c4f24f8bcd86b",
-        "name": "debug 5",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 900,
-        "y": 2440,
+        "name": "Version 3",
+        "info": "",
+        "x": 560,
+        "y": 60,
         "wires": []
-    },
-    {
-        "id": "025e472773137fdb",
-        "type": "function",
-        "z": "f15c4f24f8bcd86b",
-        "name": "upgrade",
-        "func": "msg.payload = \"/home/mxd/upgrade.sh V2\";\nreturn msg;",
-        "outputs": 1,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 340,
-        "y": 2440,
-        "wires": [
-            [
-                "2b8bc4a556aec265"
-            ]
-        ]
     },
     {
         "id": "42957c37084c9cdf",
