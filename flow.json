@@ -313,7 +313,7 @@
         "type": "debug",
         "z": "f15c4f24f8bcd86b",
         "name": "auth reply",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -1127,7 +1127,7 @@
         "type": "function",
         "z": "f15c4f24f8bcd86b",
         "name": "traffic stats",
-        "func": "msg.payload = JSON.parse(msg.payload);\nvar update = {payload:{}};\nvar now = new Date().getTime();\nvar last = context.global.traffic;\nif (last === undefined) {\n    last = msg.payload;\n    last.time = now;\n\n}\nvar attributes = {};\nattributes.version = \"V5\";\nvar props = {};\nfor(var index in msg.payload)\n{\n    var name = index;\n    if(index === \"end\") continue;\n    if(index === \"lo\") continue;\n\n    if(index.indexOf(\"enp\") >=0) name = \"ethernet\";\n    else if (index.indexOf(\"wlp2\") >= 0) name = \"wi_fi\";\n    else if (index.indexOf(\"enx\") >= 0) name = \"cell\";\n    else if (index.indexOf(\"wlx\") >= 0) name = \"wi_fi6\";\n\n    if(last[index] === undefined)\n        last[index] = msg.payload[index];\n        \n    var delta = now - last.time;\n    if(delta > 0)\n    {\n        msg.payload[index].drx = msg.payload[index].rx - last[index].rx;\n        msg.payload[index].dtx = msg.payload[index].tx - last[index].tx;\n        attributes[name+\"_ip\"] = msg.payload[index].ip;\n        props[name + \"_rx\"] = Math.round(1000*msg.payload[index].drx/delta);\n        props[name + \"_tx\"] = Math.round(1000*msg.payload[index].dtx/delta);\n    }\n}\nupdate.payload.attributes = attributes;\nupdate.payload.props = props;\n\ncontext.global.traffic = msg.payload;\ncontext.global.traffic.time = now;\n\nupdate.object = msg.payload[\"enp1s0\"].mac;\nupdate.corrId = \"traffic\";\n\nreturn update;",
+        "func": "msg.payload = JSON.parse(msg.payload);\nvar update = {payload:{}};\nvar now = new Date().getTime();\nvar last = context.global.traffic;\nif (last === undefined) {\n    last = msg.payload;\n    last.time = now;\n\n}\nvar attributes = {};\nattributes.version = \"V6\";\nattributes.ethernet_ip = \"None\";\nattributes.wi_fi_ip = \"None\";\nattributes.cell_ip = \"None\";\nattributes.wi_fi6_ip = \"None\";\n\nvar props = {};\nfor(var index in msg.payload)\n{\n    var name = index;\n    if(index === \"end\") continue;\n    if(index === \"lo\") continue;\n\n    if(index.indexOf(\"enp\") >=0) name = \"ethernet\";\n    else if (index.indexOf(\"wlp2\") >= 0) name = \"wi_fi\";\n    else if (index.indexOf(\"enx\") >= 0) name = \"cell\";\n    else if (index.indexOf(\"wlx\") >= 0) name = \"wi_fi6\";\n\n    if(last[index] === undefined)\n        last[index] = msg.payload[index];\n        \n    var delta = now - last.time;\n    if(delta > 0)\n    {\n        msg.payload[index].drx = msg.payload[index].rx - last[index].rx;\n        msg.payload[index].dtx = msg.payload[index].tx - last[index].tx;\n        attributes[name+\"_ip\"] = msg.payload[index].ip;\n        props[name + \"_rx\"] = Math.round(1000*msg.payload[index].drx/delta);\n        props[name + \"_tx\"] = Math.round(1000*msg.payload[index].dtx/delta);\n    }\n}\nupdate.payload.attributes = attributes;\nupdate.payload.props = props;\n\ncontext.global.traffic = msg.payload;\ncontext.global.traffic.time = now;\n\nupdate.object = msg.payload[\"enp1s0\"].mac;\nupdate.corrId = \"traffic\";\n\nreturn update;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -1249,7 +1249,7 @@
         "type": "debug",
         "z": "f15c4f24f8bcd86b",
         "name": "iperf",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -2066,7 +2066,7 @@
         "type": "debug",
         "z": "f15c4f24f8bcd86b",
         "name": "debug 1",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -2282,94 +2282,10 @@
         ]
     },
     {
-        "id": "bd7f1ba0.d3e408",
-        "type": "function",
-        "z": "f15c4f24f8bcd86b",
-        "name": "Redeploy Flows",
-        "func": "msg = { \n    headers: { \"Node-RED-API-Version\": \"v2\", \"Node-RED-Deployment-Type\" : \"reload\" }  \n};\nmsg.url = \"http://localhost:1880/flows\";\nreturn msg;\n\n",
-        "outputs": 1,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 360,
-        "y": 2240,
-        "wires": [
-            [
-                "ecb6a790.849a58"
-            ]
-        ]
-    },
-    {
-        "id": "ecb6a790.849a58",
-        "type": "http request",
-        "z": "f15c4f24f8bcd86b",
-        "name": "",
-        "method": "POST",
-        "ret": "obj",
-        "paytoqs": false,
-        "url": "",
-        "tls": "",
-        "persist": false,
-        "proxy": "",
-        "authType": "",
-        "x": 570,
-        "y": 2240,
-        "wires": [
-            [
-                "c43d743e.1b7a88"
-            ]
-        ]
-    },
-    {
-        "id": "c43d743e.1b7a88",
-        "type": "debug",
-        "z": "f15c4f24f8bcd86b",
-        "name": "",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "x": 770,
-        "y": 2240,
-        "wires": []
-    },
-    {
-        "id": "c4b248c3e00c7c5b",
-        "type": "inject",
-        "z": "f15c4f24f8bcd86b",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 160,
-        "y": 2240,
-        "wires": [
-            [
-                "bd7f1ba0.d3e408"
-            ]
-        ]
-    },
-    {
         "id": "20766949b8b7a6e0",
         "type": "comment",
         "z": "f15c4f24f8bcd86b",
-        "name": "Version 5",
+        "name": "Version 6",
         "info": "",
         "x": 560,
         "y": 60,
