@@ -1,0 +1,2626 @@
+[
+    {
+        "id": "f15c4f24f8bcd86b",
+        "type": "tab",
+        "label": "MXD Traffic Generator",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "7b027322cdfbb6fc",
+        "type": "tab",
+        "label": "Log",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "46e2b46aee92bd4c",
+        "type": "subflow",
+        "name": "Credentials",
+        "info": "",
+        "category": "",
+        "in": [
+            {
+                "x": 50,
+                "y": 100,
+                "wires": [
+                    {
+                        "id": "7e21b484db49ff50"
+                    }
+                ]
+            }
+        ],
+        "out": [
+            {
+                "x": 290,
+                "y": 100,
+                "wires": [
+                    {
+                        "id": "7e21b484db49ff50",
+                        "port": 0
+                    }
+                ]
+            }
+        ],
+        "env": [
+            {
+                "name": "Username",
+                "type": "cred"
+            },
+            {
+                "name": "Password",
+                "type": "cred"
+            }
+        ],
+        "meta": {},
+        "color": "#DDAA99"
+    },
+    {
+        "id": "7c3ae8806aa3856f",
+        "type": "serial-port",
+        "serialport": "/dev/ttyACM0",
+        "serialbaud": "115200",
+        "databits": "8",
+        "parity": "none",
+        "stopbits": "1",
+        "waitfor": "",
+        "dtr": "none",
+        "rts": "none",
+        "cts": "none",
+        "dsr": "none",
+        "newline": "$",
+        "bin": "false",
+        "out": "char",
+        "addchar": "",
+        "responsetimeout": "10000"
+    },
+    {
+        "id": "95db898f359846ee",
+        "type": "mqtt-broker",
+        "name": "telit",
+        "broker": "mqtt://api-dev.devicewise.com",
+        "port": "1883",
+        "clientid": "node-red-5",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "7e21b484db49ff50",
+        "type": "function",
+        "z": "46e2b46aee92bd4c",
+        "name": "",
+        "func": "msg.username = env.get(\"Username\");\nmsg.password = env.get(\"Password\");\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 180,
+        "y": 100,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "c48617baed8e6eb2",
+        "type": "comment",
+        "z": "46e2b46aee92bd4c",
+        "name": "",
+        "info": "Go to \"edit properties\" in the flow menu to add enviroment variables. Don't forget to expand a variable to set the option \"input type\" to credentials.",
+        "x": 90,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "1e2997ff0f3c3dbc",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "init globals",
+        "func": "\ncontext.global.server = \"192.168.254.11\";\ncontext.global.test = \"none\";\ncontext.global.status = \"unknown\";\ncontext.global.reply = {};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 350,
+        "y": 120,
+        "wires": [
+            [
+                "76ecae952370bd68"
+            ]
+        ]
+    },
+    {
+        "id": "b43ce7761292b6c8",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "start up",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 120,
+        "wires": [
+            [
+                "1e2997ff0f3c3dbc"
+            ]
+        ]
+    },
+    {
+        "id": "3c385ffe01e7ea4a",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "to Telit",
+        "func": "\nvar object = msg.object;\n\n\nvar propertyData = [];\nvar attributeData = [];\nvar alarmData = [];\nvar location = null;\n\nfunction telitTimestamp(time)\n{\n    //\"ts\": \"2016-10-01T00:00:00.000Z\n    var d = new Date();\n    if(time !== undefined)\n        d = new Date(time);\n    \n    var month = (d.getMonth() + 1);\n    month = month < 10 ? \"0\" + month : month;\n    var day = d.getDate() < 10 ? \"0\" + d.getDate() : d.getDate();\n    var hour = d.getHours() < 10 ? \"0\" + d.getHours() : d.getHours();\n    var min = d.getMinutes() < 10 ? \"0\" + d.getMinutes() : d.getMinutes();\n    var sec = d.getSeconds() < 10 ? \"0\" + d.getSeconds() : d.getSeconds();\n\n    var timestamp = d.getFullYear() + \"-\" + month + \"-\" + day + \"T\" + hour + \":\" + min + \":\" + sec +\".000Z\";\n    return timestamp;\n\n}\n\n\nvar props = msg.payload.props;\nvar attributes = msg.payload.attributes;\nvar alarms = msg.payload.alarms;\nvar timestamp = telitTimestamp();\n\nfor (var key in props) {\n\n    let value = props[key];\n    let item = {};\n    item.corrId = msg.corrId;\n    item.ts = timestamp;\n\n    item.key = key.toLowerCase();\n    item.value = value;\n    propertyData.push(item);\n}\n\nfor (var key in attributes) {\n\n    let value = attributes[key];\n    let item = {};\n    item.corrId = msg.corrId;\n    item.ts = timestamp;\n    item.key = key.toLowerCase();\n    item.value = \"\" + value;\n    attributeData.push(item);\n}\n\nfor (var key in alarms) {\n\n    let value = alarms[key];\n    let item = {};\n    item.corrId = msg.corrId;\n    item.ts = timestamp;\n    item.key = key.toLowerCase();\n    item.state = 0;\n    if (value != \"NO\")\n        item.state = 1;\n    alarmData.push(item);\n}\n\nvar telitMsg = {};\ntelitMsg.url = context.global.telitUrl;\n\ntelitMsg.method = \"POST\";\n\ntelitMsg.payload = {};\n\nif(propertyData.length > 0)\n    telitMsg.payload[\"prop\"] = {\n        command: \"property.batch\",\n        params: {\n            thingKey: object,\n            data: propertyData\n        }\n    };\n\nif(attributeData.length > 0)\n    telitMsg.payload[\"attr\"] = {\n        command: \"attribute.batch\",\n        params: {\n            thingKey: object,\n            data: attributeData\n        }\n    };\n\nif(alarmData.length > 0)\n    telitMsg.payload[\"alarms\"] = {\n        command: \"alarm.batch\",\n        params: {\n            thingKey: object,\n            data: alarmData\n        }\n    };\n\nif(msg.payload.location && msg.payload.location.lat && msg.payload.location.lng)\n{\n    telitMsg.payload[\"loc\"] = {\n        command: \"location.publish\",\n            params: {\n            thingKey: object,\n                lat: msg.payload.location.lat,\n                lng: msg.payload.location.lng,\n                fixType: msg.payload.location.type,\n                fixAcc: msg.payload.location.accuracy\n        }\n    }\n}\n\nif(Object.keys(telitMsg.payload).length === 0) return null;\n\ntelitMsg.topic = \"api\";\nreturn telitMsg;\n\n\n    \n",
+        "outputs": "1",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1090,
+        "y": 1940,
+        "wires": [
+            [
+                "a088e149b7018f28"
+            ]
+        ]
+    },
+    {
+        "id": "d30244a5f6867f5e",
+        "type": "link in",
+        "z": "f15c4f24f8bcd86b",
+        "name": "toTelit",
+        "links": [
+            "71d64d48.cd3234",
+            "0fc438aef772fa4d",
+            "6671d6e51cb82d2e",
+            "f65565ef4742cbc1",
+            "6ae3f6b306affc85",
+            "3dec8cb44c3b729d",
+            "dd8abc7326ceba32",
+            "a80f9413cf8979bf",
+            "c67c5abf149a9862",
+            "604ee0cd7dfbae87"
+        ],
+        "x": 985,
+        "y": 1940,
+        "wires": [
+            [
+                "3c385ffe01e7ea4a"
+            ]
+        ]
+    },
+    {
+        "id": "4c025ce486926d1d",
+        "type": "exec",
+        "z": "f15c4f24f8bcd86b",
+        "command": "",
+        "addpay": "payload",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "",
+        "x": 450,
+        "y": 340,
+        "wires": [
+            [
+                "b4a40cae750a46db",
+                "19152957a554812d"
+            ],
+            [
+                "b4a40cae750a46db",
+                "19152957a554812d"
+            ],
+            [
+                "b4a40cae750a46db",
+                "19152957a554812d"
+            ]
+        ]
+    },
+    {
+        "id": "1a71eec7d1590277",
+        "type": "http in",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "url": "/run",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 120,
+        "y": 340,
+        "wires": [
+            [
+                "12fd6fee60ded630",
+                "2277db1737ac5032"
+            ]
+        ]
+    },
+    {
+        "id": "12fd6fee60ded630",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "args",
+        "func": "\nmsg.corrId = msg.payload.cmd;\nmsg.object = msg.payload.key;\nmsg.payload = msg.payload.cmd;\n\nflow.set(\"reply\", \"\");\n\nif(msg.payload.startsWith(\"{\"))\n{\n    return [null,msg]\n}\nelse\n    return [msg,null]",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 290,
+        "y": 340,
+        "wires": [
+            [
+                "4c025ce486926d1d"
+            ],
+            [
+                "3eede33bf5feef0a"
+            ]
+        ]
+    },
+    {
+        "id": "7ea83d3ccce48c10",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "send reply",
+        "func": "msg.payload = { attributes: {cmd_reply:msg.payload}};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 830,
+        "y": 280,
+        "wires": [
+            [
+                "f65565ef4742cbc1"
+            ]
+        ]
+    },
+    {
+        "id": "0744f19219966011",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 780,
+        "wires": [
+            [
+                "2ca4206911762fd0"
+            ]
+        ]
+    },
+    {
+        "id": "2ca4206911762fd0",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "All Bands",
+        "func": "msg.reply = \"\";\nmsg.payload = \"AT!BAND=00\\r\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 780,
+        "wires": [
+            [
+                "6875564a8a0cafb1"
+            ]
+        ]
+    },
+    {
+        "id": "6875564a8a0cafb1",
+        "type": "tcp request",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "server": "192.168.1.1",
+        "port": "5510",
+        "out": "sit",
+        "ret": "string",
+        "splitc": " ",
+        "newline": "",
+        "trim": false,
+        "tls": "",
+        "x": 580,
+        "y": 900,
+        "wires": [
+            [
+                "37fac71a68f03778",
+                "507634dfea0c9c4a",
+                "b5fcad83889c3c42"
+            ]
+        ]
+    },
+    {
+        "id": "cd598b5e13245f52",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 860,
+        "wires": [
+            [
+                "d770047b31802d6c"
+            ]
+        ]
+    },
+    {
+        "id": "d770047b31802d6c",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Band 66",
+        "func": "msg.reply = \"\";\nmsg.payload = \"AT!BAND=06\\r\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 860,
+        "wires": [
+            [
+                "6875564a8a0cafb1"
+            ]
+        ]
+    },
+    {
+        "id": "c81c0ac587d17032",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 720,
+        "wires": [
+            [
+                "dbbc2bc794a6020e"
+            ]
+        ]
+    },
+    {
+        "id": "dbbc2bc794a6020e",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Band status",
+        "func": "msg.reply = \"\";\nmsg.payload = \"AT!BAND?\\r\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 720,
+        "wires": [
+            [
+                "6875564a8a0cafb1"
+            ]
+        ]
+    },
+    {
+        "id": "6349bfcf3bbfa89c",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "30 sec",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "30",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "7",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 940,
+        "wires": [
+            [
+                "5f1028caa22e0ea8"
+            ]
+        ]
+    },
+    {
+        "id": "5f1028caa22e0ea8",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "gstatus",
+        "func": "msg.reply = \"\";\nmsg.payload = \"AT!gstatus?\\r\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 940,
+        "wires": [
+            [
+                "6875564a8a0cafb1"
+            ]
+        ]
+    },
+    {
+        "id": "197541532dd56f80",
+        "type": "http in",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "url": "/AT",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 100,
+        "y": 660,
+        "wires": [
+            [
+                "478f7136b0e5d145",
+                "126cf510e349fdb7"
+            ]
+        ]
+    },
+    {
+        "id": "478f7136b0e5d145",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "get CMD",
+        "func": "\nmsg.corrId = msg.payload.cmd;\nmsg.object = msg.payload.key;\nmsg.payload = msg.payload.cmd+\"\\r\";\nmsg.reply = \"\";\nflow.set(\"pending\", true);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 660,
+        "wires": [
+            [
+                "6875564a8a0cafb1",
+                "615220bd3fc3e32f"
+            ]
+        ]
+    },
+    {
+        "id": "6df1f0de69b37a30",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "send reply",
+        "func": "if(msg.object)\n{\n    msg.payload = { attributes: { at_reply: msg.payload } };\n    return msg;\n}\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 970,
+        "y": 900,
+        "wires": [
+            [
+                "6ae3f6b306affc85"
+            ]
+        ]
+    },
+    {
+        "id": "f65565ef4742cbc1",
+        "type": "link out",
+        "z": "f15c4f24f8bcd86b",
+        "name": "link out 1",
+        "mode": "link",
+        "links": [
+            "d30244a5f6867f5e"
+        ],
+        "x": 955,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "6ae3f6b306affc85",
+        "type": "link out",
+        "z": "f15c4f24f8bcd86b",
+        "name": "link out 2",
+        "mode": "link",
+        "links": [
+            "d30244a5f6867f5e"
+        ],
+        "x": 1135,
+        "y": 900,
+        "wires": []
+    },
+    {
+        "id": "e3888935b03e6279",
+        "type": "http response",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 810,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "d5c5abc92dc63bae",
+        "type": "http response",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 950,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "37fac71a68f03778",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "complete",
+        "func": "msg.reply += msg.payload;\nlet pending = flow.get(\"pending\");\n\nif(pending && msg.reply.indexOf(\"OK\") >= 0 || msg.reply.indexOf(\"ERROR\") >= 0)\n{\n    msg.payload = msg.reply;\n    flow.set(\"pending\",false);\n    return msg;\n}\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 780,
+        "y": 900,
+        "wires": [
+            [
+                "d5c5abc92dc63bae",
+                "6df1f0de69b37a30",
+                "8847387dbc9ca25f"
+            ]
+        ]
+    },
+    {
+        "id": "c47d3524ec27459c",
+        "type": "debug",
+        "z": "f15c4f24f8bcd86b",
+        "name": "AT reply",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1140,
+        "y": 960,
+        "wires": []
+    },
+    {
+        "id": "c0ae5ce8ec9c9749",
+        "type": "debug",
+        "z": "f15c4f24f8bcd86b",
+        "name": "AT cmd",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 420,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "6410bb05950a3f9d",
+        "type": "catch",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "scope": null,
+        "uncaught": false,
+        "x": 880,
+        "y": 120,
+        "wires": [
+            [
+                "c8155aee1e9f4b26"
+            ]
+        ]
+    },
+    {
+        "id": "f76ef1bcc56ab53e",
+        "type": "debug",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Catch Error",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1230,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "615220bd3fc3e32f",
+        "type": "delay",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "15",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 520,
+        "y": 660,
+        "wires": [
+            [
+                "4444caa694988188"
+            ]
+        ]
+    },
+    {
+        "id": "4444caa694988188",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "timeout",
+        "func": "if(flow.get(\"pending\") == true)\n{\n    flow.set(\"pending\",false);\n    msg.payload = \"Timeout\";\n    return msg;\n}\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 780,
+        "y": 660,
+        "wires": [
+            [
+                "d5c5abc92dc63bae",
+                "b633e64447911ede",
+                "0d23e907a4d9fe5a"
+            ]
+        ]
+    },
+    {
+        "id": "70f3fa8ebe71874c",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "debug",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 90,
+        "y": 1220,
+        "wires": [
+            [
+                "f864832dba88db23"
+            ]
+        ]
+    },
+    {
+        "id": "f864832dba88db23",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "pending",
+        "func": "msg.payload = flow.get(\"pending\");\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 280,
+        "y": 1220,
+        "wires": [
+            [
+                "1518ecec386b3c66"
+            ]
+        ]
+    },
+    {
+        "id": "1518ecec386b3c66",
+        "type": "debug",
+        "z": "f15c4f24f8bcd86b",
+        "name": "pending AT",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 450,
+        "y": 1220,
+        "wires": []
+    },
+    {
+        "id": "6817145418b61950",
+        "type": "debug",
+        "z": "f15c4f24f8bcd86b",
+        "name": "AT timeout",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1170,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "98e889031fa8a246",
+        "type": "debug",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Cmd",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 450,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "aa34f775b329391a",
+        "type": "debug",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Cmd reply",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1050,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "63167d8485c1df90",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "1 min",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "60",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "2",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 90,
+        "y": 1400,
+        "wires": [
+            [
+                "ccca4b8bf4be4bcd"
+            ]
+        ]
+    },
+    {
+        "id": "ccca4b8bf4be4bcd",
+        "type": "exec",
+        "z": "f15c4f24f8bcd86b",
+        "command": "/home/mxd/traffic.sh",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "",
+        "x": 360,
+        "y": 1400,
+        "wires": [
+            [
+                "07893c08c4b5e417"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "07893c08c4b5e417",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "traffic stats",
+        "func": "msg.payload = JSON.parse(msg.payload);\nvar update = {payload:{}};\nvar now = new Date().getTime();\nvar last = context.global.traffic;\nif (last === undefined) {\n    last = msg.payload;\n    last.time = now;\n\n}\nvar attributes = {};\nattributes.version = \"V8\";\nattributes.ethernet_ip = \"None\";\nattributes.wi_fi_ip = \"None\";\nattributes.cell_ip = \"None\";\nattributes.wi_fi6_ip = \"None\";\n\nvar props = {};\nfor(var index in msg.payload)\n{\n    var name = index;\n    if(index === \"end\") continue;\n    if(index === \"lo\") continue;\n\n    if(index.indexOf(\"enp\") >=0) name = \"ethernet\";\n    else if (index.indexOf(\"wlp2\") >= 0) name = \"wi_fi\";\n    else if (index.indexOf(\"enx\") >= 0) name = \"cell\";\n    else if (index.indexOf(\"wlx\") >= 0) name = \"wi_fi6\";\n\n    if(last[index] === undefined)\n        last[index] = msg.payload[index];\n        \n    var delta = now - last.time;\n    if(delta > 0)\n    {\n        msg.payload[index].drx = msg.payload[index].rx - last[index].rx;\n        msg.payload[index].dtx = msg.payload[index].tx - last[index].tx;\n        attributes[name+\"_ip\"] = msg.payload[index].ip;\n        props[name + \"_rx\"] = Math.round(1000*msg.payload[index].drx/delta);\n        props[name + \"_tx\"] = Math.round(1000*msg.payload[index].dtx/delta);\n    }\n}\nupdate.payload.attributes = attributes;\nupdate.payload.props = props;\n\ncontext.global.traffic = msg.payload;\ncontext.global.traffic.time = now;\n\nupdate.object = msg.payload[\"enp1s0\"].mac;\nupdate.corrId = \"traffic\";\n\nreturn update;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 630,
+        "y": 1400,
+        "wires": [
+            [
+                "0f7ef2217e51a00d",
+                "3dec8cb44c3b729d"
+            ]
+        ]
+    },
+    {
+        "id": "0f7ef2217e51a00d",
+        "type": "debug",
+        "z": "f15c4f24f8bcd86b",
+        "name": "traffic",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 790,
+        "y": 1440,
+        "wires": []
+    },
+    {
+        "id": "3dec8cb44c3b729d",
+        "type": "link out",
+        "z": "f15c4f24f8bcd86b",
+        "name": "link out 3",
+        "mode": "link",
+        "links": [
+            "d30244a5f6867f5e"
+        ],
+        "x": 755,
+        "y": 1400,
+        "wires": []
+    },
+    {
+        "id": "f2f41cad0e293d23",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "4 sec",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "4",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "5",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 90,
+        "y": 1520,
+        "wires": [
+            [
+                "f257255f7d5c6be1"
+            ]
+        ]
+    },
+    {
+        "id": "f257255f7d5c6be1",
+        "type": "exec",
+        "z": "f15c4f24f8bcd86b",
+        "command": "/home/mxd/status.sh",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "",
+        "x": 360,
+        "y": 1520,
+        "wires": [
+            [
+                "dcebdebe26399f8a"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "dcebdebe26399f8a",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "iperf status",
+        "func": "try {\n    msg.payload = JSON.parse(msg.payload);\n    var update = { payload: {} };\n\n    update.object = msg.payload.mac;\n    update.corrId = \"status\";\n    update.payload.attributes = {};\n\n\n    var last = context.global.status;\n    if (last === undefined) {\n        last = msg.payload;\n        context.global.status = msg.payload;\n        update.payload.attributes.iperf = msg.payload.iperf;\n        update.payload.attributes.ifname = msg.payload.ifname || \"unknown\";\n        return update;\n    }\n\n    if (last.iperf != msg.payload.iperf) {\n        context.global.status = msg.payload;\n        update.payload.attributes.iperf = msg.payload.iperf;\n        update.payload.attributes.ifname = msg.payload.ifname || \"unknown\";\n        return update;\n    }\n\n    context.global.status = msg.payload;\n}\ncatch (e) {\n    node.warn(e)\n}\n\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 630,
+        "y": 1520,
+        "wires": [
+            [
+                "4e08c1b012a301d1",
+                "dd8abc7326ceba32",
+                "cabdde4e08c729c6"
+            ]
+        ]
+    },
+    {
+        "id": "4e08c1b012a301d1",
+        "type": "debug",
+        "z": "f15c4f24f8bcd86b",
+        "name": "iperf",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 790,
+        "y": 1560,
+        "wires": []
+    },
+    {
+        "id": "dd8abc7326ceba32",
+        "type": "link out",
+        "z": "f15c4f24f8bcd86b",
+        "name": "link out 4",
+        "mode": "link",
+        "links": [
+            "d30244a5f6867f5e"
+        ],
+        "x": 755,
+        "y": 1500,
+        "wires": []
+    },
+    {
+        "id": "0ad7a7c2b0a71671",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 1000,
+        "wires": [
+            [
+                "fc569f1a4bb03ab6"
+            ]
+        ]
+    },
+    {
+        "id": "fc569f1a4bb03ab6",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "def band 46",
+        "func": "msg.payload = 'AT!BAND=04,\"LTE B46\",0,200000000000\\r';\nreturn msg;\n\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 1000,
+        "wires": [
+            [
+                "6875564a8a0cafb1"
+            ]
+        ]
+    },
+    {
+        "id": "724a4abffa5692b6",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 1140,
+        "wires": [
+            [
+                "48cd1e55d941362a"
+            ]
+        ]
+    },
+    {
+        "id": "48cd1e55d941362a",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "list bands",
+        "func": "msg.payload = 'AT!BAND=?\\r';\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 1140,
+        "wires": [
+            [
+                "6875564a8a0cafb1"
+            ]
+        ]
+    },
+    {
+        "id": "69e4e9475a38ce77",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 1040,
+        "wires": [
+            [
+                "bdcbb5e5deaf36c7"
+            ]
+        ]
+    },
+    {
+        "id": "bdcbb5e5deaf36c7",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "def band 66",
+        "func": "msg.payload = 'AT!BAND=06,\"LTE B66\",0,0,2\\r';\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 1040,
+        "wires": [
+            [
+                "6875564a8a0cafb1"
+            ]
+        ]
+    },
+    {
+        "id": "c2fea8a1215f330e",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 1180,
+        "wires": [
+            [
+                "f817d61e6e145c6b"
+            ]
+        ]
+    },
+    {
+        "id": "f817d61e6e145c6b",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "AT",
+        "func": "msg.payload = 'AT\\r';\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 290,
+        "y": 1180,
+        "wires": [
+            [
+                "6875564a8a0cafb1"
+            ]
+        ]
+    },
+    {
+        "id": "b4a40cae750a46db",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "reply or error",
+        "func": "let reply = context.global.reply[msg._msgid] || \"\";\nif (typeof msg.payload === 'string')\n    reply += msg.payload;\nelse if(Buffer.isBuffer(msg.payload))\n    reply += msg.payload;\n\ncontext.global.reply[msg._msgid] = reply;\n\nif (msg.payload.code !== undefined) {\n    if(reply == \"\")\n        reply = \"No Reply\";\n    msg.payload = reply;\n    delete context.global.reply[msg._msgid];\n    return msg;\n}\n\nreturn null;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 630,
+        "y": 340,
+        "wires": [
+            [
+                "e3888935b03e6279",
+                "7ea83d3ccce48c10",
+                "018aed4d51153c55"
+            ]
+        ]
+    },
+    {
+        "id": "cabdde4e08c729c6",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Iperf LED",
+        "func": "var status = msg.payload.attributes.iperf;\nvar ifname = msg.payload.attributes.ifname;\nvar led = { payload: \"\" };\nif (status === \"running\")\n    led.payload = \"#3,1,00FF00,0,iperf \" + ifname + \",running,\\n\";\nelse\n    led.payload = \"#3,1,000000,0,iperf,stopped,\\n#2,1,000000,0,Test,none,\\n\";\n\nreturn led;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 900,
+        "y": 1520,
+        "wires": [
+            [
+                "5f6d10753fde112a"
+            ]
+        ]
+    },
+    {
+        "id": "3cfe36627d14dde3",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "test LED",
+        "func": "var test = context.global.test;\n\nvar led = {payload:\"\"};\nif (test !== \"none\")\n    led.payload = \"#2,1,00FF00,0,Test,\"+test+\",\\n\";\nelse\n    led.payload = \"#2,1,000000,0,Test,Unknown,\\n\";\n\nreturn led;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 400,
+        "wires": [
+            [
+                "f7ebe092f5de9cef"
+            ]
+        ]
+    },
+    {
+        "id": "9448b6ae02e93777",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "30 sec",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "30",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "4",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 1640,
+        "wires": [
+            [
+                "33048f588d7a47a7"
+            ]
+        ]
+    },
+    {
+        "id": "5a5eef0d9878cd3c",
+        "type": "exec",
+        "z": "f15c4f24f8bcd86b",
+        "command": "",
+        "addpay": "payload",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "",
+        "x": 850,
+        "y": 1640,
+        "wires": [
+            [
+                "ff774b164b52a7fa",
+                "b1edea12d4138683"
+            ],
+            [
+                "b1edea12d4138683"
+            ],
+            [
+                "b1edea12d4138683"
+            ]
+        ]
+    },
+    {
+        "id": "ff774b164b52a7fa",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Server IP LEDs",
+        "func": "var status = msg.payload.indexOf(\"1 received\");\nvar led = { payload: \"\" };\nif (status >= 0)\n    led.payload = \"#1,1,00FF00,0,IP \" + msg.ip + \",\" + context.global.server + \" Online,\\n\";\nelse\n    led.payload = \"#1,1,FF0000,0,IP \" + msg.ip + \",\" + context.global.server + \" Offline,\\n\";\n\nreturn led;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1040,
+        "y": 1640,
+        "wires": [
+            [
+                "8c5add3032b20d52"
+            ]
+        ]
+    },
+    {
+        "id": "d247e509b3c1c3ce",
+        "type": "exec",
+        "z": "f15c4f24f8bcd86b",
+        "command": "",
+        "addpay": "payload",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "2",
+        "winHide": false,
+        "oldrc": false,
+        "name": "",
+        "x": 490,
+        "y": 1640,
+        "wires": [
+            [
+                "95833beef7e62231",
+                "43d9b5622c3544c5"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "95833beef7e62231",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "ping",
+        "func": "var tokens = msg.payload.split(\" \");\n\nmsg.ifname = tokens[2];\nmsg.ip = tokens[4];\n\nmsg.payload = \"ping -c 1 -t 1  \"+context.global.server;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 650,
+        "y": 1640,
+        "wires": [
+            [
+                "5a5eef0d9878cd3c"
+            ]
+        ]
+    },
+    {
+        "id": "33048f588d7a47a7",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "get route",
+        "func": "msg.payload = \"ip route get \"+context.global.server;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 320,
+        "y": 1640,
+        "wires": [
+            [
+                "d247e509b3c1c3ce"
+            ]
+        ]
+    },
+    {
+        "id": "3eede33bf5feef0a",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "config",
+        "func": "var reply = \"\";\ntry{\n    var config = JSON.parse(msg.payload)\n    \n\n    if(config.test != undefined)\n    {\n        context.global.test = config.test;\n        reply += \" test set to \"+config.test;\n    }\n    if (config.server != undefined)\n    {\n        context.global.server = config.server;\n        reply += \" server set to \"+config.server;\n    }\n}\ncatch(e){\n    node.warn(e);\n    reply += \"Parse error \"+msg.payload;\n    \n}\nmsg.payload = {code:0,message:reply};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 450,
+        "y": 400,
+        "wires": [
+            [
+                "b4a40cae750a46db",
+                "3cfe36627d14dde3"
+            ]
+        ]
+    },
+    {
+        "id": "76ecae952370bd68",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "test LED",
+        "func": "var test = context.global.test;\n\nvar led = {payload:\"\"};\nif (test !== \"none\")\n    led.payload = \"#2,1,00FF00,0,Test,\"+test+\",\\n\";\nelse\n    led.payload = \"#1,0,000000,0,Test,Off,\\n#2,0,000000,0,Test,Off,\\n#3,0,000000,0,Test,Off,\\n#4,0,000000,0,Test,Off,\\n#5,0,000000,0,Test,Off,\\n\";\n\nreturn led;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 540,
+        "y": 120,
+        "wires": [
+            [
+                "03ef22d2bea7bf9e"
+            ]
+        ]
+    },
+    {
+        "id": "b1edea12d4138683",
+        "type": "debug",
+        "z": "f15c4f24f8bcd86b",
+        "name": "ping",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1010,
+        "y": 1700,
+        "wires": []
+    },
+    {
+        "id": "43d9b5622c3544c5",
+        "type": "debug",
+        "z": "f15c4f24f8bcd86b",
+        "name": "route",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 650,
+        "y": 1680,
+        "wires": []
+    },
+    {
+        "id": "126d4b350f3d104e",
+        "type": "link in",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Display",
+        "links": [
+            "f7ebe092f5de9cef",
+            "97626e2f2a8ca796",
+            "03ef22d2bea7bf9e",
+            "5f6d10753fde112a",
+            "8c5add3032b20d52",
+            "52cf9d335f90b2b8",
+            "e577b30fe921bd50"
+        ],
+        "x": 875,
+        "y": 460,
+        "wires": [
+            [
+                "ac38d66296b678d9",
+                "a996bbdb6d23f90c"
+            ]
+        ]
+    },
+    {
+        "id": "f7ebe092f5de9cef",
+        "type": "link out",
+        "z": "f15c4f24f8bcd86b",
+        "name": "link out 5",
+        "mode": "link",
+        "links": [
+            "126d4b350f3d104e"
+        ],
+        "x": 755,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "03ef22d2bea7bf9e",
+        "type": "link out",
+        "z": "f15c4f24f8bcd86b",
+        "name": "link out 7",
+        "mode": "link",
+        "links": [
+            "126d4b350f3d104e"
+        ],
+        "x": 685,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "5f6d10753fde112a",
+        "type": "link out",
+        "z": "f15c4f24f8bcd86b",
+        "name": "link out 8",
+        "mode": "link",
+        "links": [
+            "126d4b350f3d104e"
+        ],
+        "x": 1035,
+        "y": 1520,
+        "wires": []
+    },
+    {
+        "id": "8c5add3032b20d52",
+        "type": "link out",
+        "z": "f15c4f24f8bcd86b",
+        "name": "link out 9",
+        "mode": "link",
+        "links": [
+            "126d4b350f3d104e"
+        ],
+        "x": 1195,
+        "y": 1640,
+        "wires": []
+    },
+    {
+        "id": "ac38d66296b678d9",
+        "type": "serial request",
+        "z": "f15c4f24f8bcd86b",
+        "name": "serial",
+        "serial": "7c3ae8806aa3856f",
+        "x": 1150,
+        "y": 460,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "507634dfea0c9c4a",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "parse status",
+        "func": "\nif(msg.payload.indexOf(\"at!gstatus\") >=0)\n{\n    try{\n    var json = {payload:{}};\n    var tokens = msg.payload.split(/[\\n\\r]+/);\n\n    let obj = \"\";\n    for(var i in tokens)\n    {\n        if(tokens[i].indexOf(\":\")>=0)\n        {\n            let pair = tokens[i].split(\":\");\n            if(pair.length == 2)\n            {\n                let key = pair[0];\n                let value  = pair[1].replace(/\\t/g, '').trim();\n                if(value == \"\")\n                {\n                    json.payload[key] = {};\n                    obj = key;\n                }\n                else{\n                    if(obj != \"\")\n                        json.payload[obj][key] = value;\n                    else\n                        json.payload[key] = value;\n                }\n            }\n            else if (pair.length == 3)\n            {\n                let lines = tokens[i].split(\"\\t\\t\");\n                for(var j in lines)\n                {\n                    pair = lines[j].split(\":\");\n                    if(pair.length == 2)\n                    {\n                        let key = pair[0];\n                        json.payload[key] = pair[1].replace(/\\t/g, '').trim();\n                    }\n                }\n            }\n        }\n    }\n    return json;\n    }\n    catch(e){\n        node.warn(e);\n        return null;\n    }\n}\nreturn null;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 790,
+        "y": 1020,
+        "wires": [
+            [
+                "1741c26703d22ae2",
+                "5c32ba4d7d06f994"
+            ]
+        ]
+    },
+    {
+        "id": "1741c26703d22ae2",
+        "type": "debug",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Cell status",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 990,
+        "y": 1080,
+        "wires": []
+    },
+    {
+        "id": "5c32ba4d7d06f994",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Cell LED",
+        "func": "var status = msg.payload.Mode;\nvar band = msg.payload[\"System Mode\"];\nvar led = { payload: \"\" };\nif (status === \"Online\")\n    led.payload = \"#5,1,00FF00,0,Cell,\" + status + \" \" + band + \",\\n\";\nelse\n    led.payload = \"#5,1,000000,0,Cell,unknown,\\n\";\n\nreturn led;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 980,
+        "y": 1020,
+        "wires": [
+            [
+                "52cf9d335f90b2b8"
+            ]
+        ]
+    },
+    {
+        "id": "52cf9d335f90b2b8",
+        "type": "link out",
+        "z": "f15c4f24f8bcd86b",
+        "name": "link out 10",
+        "mode": "link",
+        "links": [
+            "126d4b350f3d104e"
+        ],
+        "x": 1125,
+        "y": 1020,
+        "wires": []
+    },
+    {
+        "id": "c17d7e00ef46aea0",
+        "type": "comment",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Update Telit properties and attributes",
+        "info": "",
+        "x": 170,
+        "y": 1860,
+        "wires": []
+    },
+    {
+        "id": "e0a30b1db4dd72af",
+        "type": "comment",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Execute remote command from Telit",
+        "info": "",
+        "x": 160,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "2db382506124ba53",
+        "type": "comment",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Ececute remote AT command from Telit",
+        "info": "",
+        "x": 170,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "97ce8da12243c184",
+        "type": "comment",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Run periodic audits",
+        "info": "",
+        "x": 110,
+        "y": 1320,
+        "wires": []
+    },
+    {
+        "id": "6e5f2ffb8cefc0cb",
+        "type": "comment",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Initialize global variables on start up and clear LED screen",
+        "info": "",
+        "x": 230,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "b633e64447911ede",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "send timeout",
+        "func": "if(msg.object)\n{\n    msg.payload = { attributes: { at_reply: \"Timeout\"} };\n    return msg;\n}\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 970,
+        "y": 660,
+        "wires": [
+            [
+                "a80f9413cf8979bf"
+            ]
+        ]
+    },
+    {
+        "id": "a80f9413cf8979bf",
+        "type": "link out",
+        "z": "f15c4f24f8bcd86b",
+        "name": "link out 11",
+        "mode": "link",
+        "links": [
+            "d30244a5f6867f5e"
+        ],
+        "x": 1135,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "19152957a554812d",
+        "type": "debug",
+        "z": "f15c4f24f8bcd86b",
+        "name": "debug 1",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 660,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "d5c96bec8be11c5d",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 1080,
+        "wires": [
+            [
+                "7faccb6fee40cee3"
+            ]
+        ]
+    },
+    {
+        "id": "7faccb6fee40cee3",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "def band 02",
+        "func": "msg.payload = 'AT!BAND=02,\"LTE 02\",0,2\\r';\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 1080,
+        "wires": [
+            [
+                "6875564a8a0cafb1"
+            ]
+        ]
+    },
+    {
+        "id": "b5fcad83889c3c42",
+        "type": "debug",
+        "z": "f15c4f24f8bcd86b",
+        "name": "debug 2",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 780,
+        "y": 840,
+        "wires": []
+    },
+    {
+        "id": "2277db1737ac5032",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "log CMD",
+        "func": "context.global.log(\"CMD\", msg.payload.cmd);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 280,
+        "wires": [
+            [
+                "98e889031fa8a246"
+            ]
+        ]
+    },
+    {
+        "id": "018aed4d51153c55",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "log CMD reply",
+        "func": "context.global.log(\"CMD reply\", msg.payload);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 840,
+        "y": 400,
+        "wires": [
+            [
+                "aa34f775b329391a"
+            ]
+        ]
+    },
+    {
+        "id": "126cf510e349fdb7",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "log AT",
+        "func": "context.global.log(\"AT\", msg.payload.cmd);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 290,
+        "y": 600,
+        "wires": [
+            [
+                "c0ae5ce8ec9c9749"
+            ]
+        ]
+    },
+    {
+        "id": "0d23e907a4d9fe5a",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "log At timeout",
+        "func": "context.global.log(\"AT timeout\", msg.payload);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 980,
+        "y": 620,
+        "wires": [
+            [
+                "6817145418b61950"
+            ]
+        ]
+    },
+    {
+        "id": "8847387dbc9ca25f",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "log AT Reply",
+        "func": "context.global.log(\"AT Relpy\", msg.payload);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 970,
+        "y": 960,
+        "wires": [
+            [
+                "c47d3524ec27459c"
+            ]
+        ]
+    },
+    {
+        "id": "c8155aee1e9f4b26",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "log ERROR",
+        "func": "context.global.log(\"Failed\", msg.payload);\ncontext.global.log(\"ERROR\", msg.error.message);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1070,
+        "y": 120,
+        "wires": [
+            [
+                "f76ef1bcc56ab53e"
+            ]
+        ]
+    },
+    {
+        "id": "a996bbdb6d23f90c",
+        "type": "delay",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "2",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 1000,
+        "y": 500,
+        "wires": [
+            [
+                "ac38d66296b678d9"
+            ]
+        ]
+    },
+    {
+        "id": "20766949b8b7a6e0",
+        "type": "comment",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Version 8",
+        "info": "",
+        "x": 560,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "4475c9d8348d6fe9",
+        "type": "mqtt in",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "topic": "command",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "95db898f359846ee",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 120,
+        "y": 2040,
+        "wires": [
+            [
+                "f4483b0b6d808c12"
+            ]
+        ]
+    },
+    {
+        "id": "a088e149b7018f28",
+        "type": "mqtt out",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "topic": "",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "95db898f359846ee",
+        "x": 1210,
+        "y": 1940,
+        "wires": []
+    },
+    {
+        "id": "ec6340a026a0d5c7",
+        "type": "exec",
+        "z": "f15c4f24f8bcd86b",
+        "command": "",
+        "addpay": "payload",
+        "append": "",
+        "useSpawn": "true",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "",
+        "x": 490,
+        "y": 2040,
+        "wires": [
+            [
+                "07af99fbc64e2236",
+                "dd052c1c7082eab4"
+            ],
+            [
+                "dd052c1c7082eab4"
+            ],
+            [
+                "dd052c1c7082eab4"
+            ]
+        ]
+    },
+    {
+        "id": "07af99fbc64e2236",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "mqtt_reply",
+        "func": "msg.payload = { attributes: { mqtt_reply: msg.payload } };\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 690,
+        "y": 2020,
+        "wires": [
+            [
+                "b37e81abf3a63aa5",
+                "604ee0cd7dfbae87"
+            ]
+        ]
+    },
+    {
+        "id": "f4483b0b6d808c12",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "parse",
+        "func": "var cmd = msg.payload.cmd;\nvar key = msg.payload.key;\nmsg.payload = cmd;\nmsg.object = key;\nmsg.cmd = cmd;\nmsg.corrid = cmd;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 330,
+        "y": 2040,
+        "wires": [
+            [
+                "ec6340a026a0d5c7"
+            ]
+        ]
+    },
+    {
+        "id": "b37e81abf3a63aa5",
+        "type": "debug",
+        "z": "f15c4f24f8bcd86b",
+        "name": "debug 6",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 880,
+        "y": 2060,
+        "wires": []
+    },
+    {
+        "id": "dd052c1c7082eab4",
+        "type": "debug",
+        "z": "f15c4f24f8bcd86b",
+        "name": "debug 7",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 680,
+        "y": 2080,
+        "wires": []
+    },
+    {
+        "id": "3c8faceecb7670cb",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Telit LED",
+        "func": "var led = { payload: \"\" };\nled.payload = \"#4,1,000000,0,Telit,Offline,\\n\";\ntry{\n    var status = msg?.status?.fill;\n\n\n    if(status === \"green\")\n        led.payload = \"#4,1,00FF00,0,Telit,Online,\\n\";\n\n}\ncatch(e)\n{\n    node.warn(e);\n    context.global.telitSessionId = null;\n}\nreturn led;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 2100,
+        "wires": [
+            [
+                "97626e2f2a8ca796"
+            ]
+        ]
+    },
+    {
+        "id": "97626e2f2a8ca796",
+        "type": "link out",
+        "z": "f15c4f24f8bcd86b",
+        "name": "link out 6",
+        "mode": "link",
+        "links": [
+            "126d4b350f3d104e"
+        ],
+        "x": 455,
+        "y": 2100,
+        "wires": []
+    },
+    {
+        "id": "b62c78a586a6ab86",
+        "type": "status",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "scope": [
+            "4475c9d8348d6fe9"
+        ],
+        "x": 120,
+        "y": 2100,
+        "wires": [
+            [
+                "3c8faceecb7670cb"
+            ]
+        ]
+    },
+    {
+        "id": "4adaa841b838032b",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "30 sec",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "30",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "2",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 120,
+        "y": 1760,
+        "wires": [
+            [
+                "e92f1d238b0db4b2"
+            ]
+        ]
+    },
+    {
+        "id": "e92f1d238b0db4b2",
+        "type": "exec",
+        "z": "f15c4f24f8bcd86b",
+        "command": "nmcli -f IP4.ADDRESS dev show enx00a0c6000000",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "cell",
+        "x": 310,
+        "y": 1760,
+        "wires": [
+            [
+                "af4d1d9b1ebf5842"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "af4d1d9b1ebf5842",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Cell LED",
+        "func": "var status = msg.payload\n\nvar led = { payload: \"#5,1,000000,0,Cell,unknown,\\n\" };\nif (status == \"\")\n    return led;\n\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 500,
+        "y": 1760,
+        "wires": [
+            [
+                "e577b30fe921bd50"
+            ]
+        ]
+    },
+    {
+        "id": "e577b30fe921bd50",
+        "type": "link out",
+        "z": "f15c4f24f8bcd86b",
+        "name": "link out 12",
+        "mode": "link",
+        "links": [
+            "126d4b350f3d104e"
+        ],
+        "x": 625,
+        "y": 1760,
+        "wires": []
+    },
+    {
+        "id": "604ee0cd7dfbae87",
+        "type": "link out",
+        "z": "f15c4f24f8bcd86b",
+        "name": "link out 13",
+        "mode": "link",
+        "links": [
+            "d30244a5f6867f5e"
+        ],
+        "x": 835,
+        "y": 2020,
+        "wires": []
+    },
+    {
+        "id": "5c1d9b9e0fb86cc0",
+        "type": "mqtt in",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "topic": "#",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "95db898f359846ee",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 1070,
+        "y": 2180,
+        "wires": [
+            [
+                "bbcddea557a659a4"
+            ]
+        ]
+    },
+    {
+        "id": "bbcddea557a659a4",
+        "type": "debug",
+        "z": "f15c4f24f8bcd86b",
+        "name": "debug 8",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1240,
+        "y": 2180,
+        "wires": []
+    },
+    {
+        "id": "42957c37084c9cdf",
+        "type": "file",
+        "z": "7b027322cdfbb6fc",
+        "name": "",
+        "filename": "AttLog",
+        "filenameType": "str",
+        "appendNewline": true,
+        "createDir": false,
+        "overwriteFile": "true",
+        "encoding": "utf8",
+        "x": 590,
+        "y": 360,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "a3ab61dd9be0b1be",
+        "type": "function",
+        "z": "7b027322cdfbb6fc",
+        "name": "Clear Log",
+        "func": "var date = new Date();\n\nmsg.payload = date.toISOString()+\": Cleared\";\n\n\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 440,
+        "y": 360,
+        "wires": [
+            [
+                "42957c37084c9cdf"
+            ]
+        ]
+    },
+    {
+        "id": "c54c222b7b618c4a",
+        "type": "inject",
+        "z": "7b027322cdfbb6fc",
+        "name": "Clear Log",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 260,
+        "y": 360,
+        "wires": [
+            [
+                "a3ab61dd9be0b1be"
+            ]
+        ]
+    },
+    {
+        "id": "0689594f2ba0a304",
+        "type": "inject",
+        "z": "7b027322cdfbb6fc",
+        "name": "View Log",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 260,
+        "y": 180,
+        "wires": [
+            [
+                "a292fa66f891a0b8"
+            ]
+        ]
+    },
+    {
+        "id": "58f3cd1165ed6c70",
+        "type": "debug",
+        "z": "7b027322cdfbb6fc",
+        "name": "",
+        "active": true,
+        "console": "false",
+        "complete": "false",
+        "x": 610,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "55db257e14f22b54",
+        "type": "http in",
+        "z": "7b027322cdfbb6fc",
+        "name": "",
+        "url": "/log",
+        "method": "get",
+        "swaggerDoc": "",
+        "x": 260,
+        "y": 240,
+        "wires": [
+            [
+                "471df61c80a4e535"
+            ]
+        ]
+    },
+    {
+        "id": "61635b21c88a8723",
+        "type": "http response",
+        "z": "7b027322cdfbb6fc",
+        "name": "",
+        "x": 930,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "7ea42feb9bf027af",
+        "type": "function",
+        "z": "7b027322cdfbb6fc",
+        "name": "Format log",
+        "func": "var filter = msg.filter;\nvar lines = msg.payload.split(\"\\n\");\nvar log = \"\";\nfor(var i = 0;i<lines.length;i++)\n{\n   if(filter === undefined || lines[i].indexOf(filter) >=0)\n        log += \"<p>\"+lines[i]+\"</p>\"; \n}\n\nvar events = context.global.eventlog;\n\nfor(var i = 0;i<events.length;i++)\n{\n    if(filter === undefined || events[i].indexOf(filter) >=0)\n        log += \"<p>\"+events[i]+\"</p>\";\n}\n\nmsg.payload = log;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 750,
+        "y": 240,
+        "wires": [
+            [
+                "61635b21c88a8723"
+            ]
+        ]
+    },
+    {
+        "id": "471df61c80a4e535",
+        "type": "function",
+        "z": "7b027322cdfbb6fc",
+        "name": "Filter",
+        "func": "msg.filter = msg.payload.filter;\n\n\n\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 430,
+        "y": 240,
+        "wires": [
+            [
+                "7bb6e5a89566eba1"
+            ]
+        ]
+    },
+    {
+        "id": "748e120f3acd24b8",
+        "type": "inject",
+        "z": "7b027322cdfbb6fc",
+        "name": "Init",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 270,
+        "y": 120,
+        "wires": [
+            [
+                "2854908935a09a57"
+            ]
+        ]
+    },
+    {
+        "id": "2854908935a09a57",
+        "type": "function",
+        "z": "7b027322cdfbb6fc",
+        "name": "Log",
+        "func": "context.global.eventlog = [];\n\nfunction log(tag,data)\n{\n    var date = new Date();\n    var line;\n    \n    if(typeof data === 'object')\n    {\n        if(data.payload === undefined)\n            line = date.toISOString()+\": \"+tag+\" \"+JSON.stringify(data); \n        else \n            line = date.toISOString()+\": \"+tag+\" \"+JSON.stringify(data.payload);\n    }\n\n    else\n        line = date.toISOString()+\": \"+tag+\" \"+data;\n\n\n    context.global.eventlog.push(line.replaceAll(\"\\n\",\" \"));\n}\n\n\ncontext.global.log = log;\n\ncontext.global.log(\"Restart \",\"\");\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 430,
+        "y": 120,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "81f0e7c5d5fd3b93",
+        "type": "file",
+        "z": "7b027322cdfbb6fc",
+        "name": "",
+        "filename": "AttLog",
+        "filenameType": "str",
+        "appendNewline": true,
+        "createDir": false,
+        "overwriteFile": "false",
+        "encoding": "utf8",
+        "x": 590,
+        "y": 300,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "46a1813e9c402b9b",
+        "type": "function",
+        "z": "7b027322cdfbb6fc",
+        "name": "Write Log",
+        "func": "var events = context.global.eventlog;\n\nfor(var i = 0;i<events.length;i++)\n{\n    msg.payload = events[i];\n    node.send(msg)\n}\n\ncontext.global.eventlog = [];\n\nreturn null;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 440,
+        "y": 300,
+        "wires": [
+            [
+                "81f0e7c5d5fd3b93"
+            ]
+        ]
+    },
+    {
+        "id": "22879e6edb0f77c0",
+        "type": "inject",
+        "z": "7b027322cdfbb6fc",
+        "name": "Write Log",
+        "props": [
+            {
+                "p": "payload",
+                "v": "",
+                "vt": "date"
+            },
+            {
+                "p": "topic",
+                "v": "",
+                "vt": "str"
+            }
+        ],
+        "repeat": "30",
+        "crontab": "",
+        "once": false,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 250,
+        "y": 300,
+        "wires": [
+            [
+                "46a1813e9c402b9b"
+            ]
+        ]
+    },
+    {
+        "id": "a292fa66f891a0b8",
+        "type": "file in",
+        "z": "7b027322cdfbb6fc",
+        "name": "",
+        "filename": "AttLog",
+        "filenameType": "str",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": false,
+        "x": 430,
+        "y": 180,
+        "wires": [
+            [
+                "58f3cd1165ed6c70"
+            ]
+        ]
+    },
+    {
+        "id": "7bb6e5a89566eba1",
+        "type": "file in",
+        "z": "7b027322cdfbb6fc",
+        "name": "",
+        "filename": "AttLog",
+        "filenameType": "str",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "utf8",
+        "allProps": false,
+        "x": 590,
+        "y": 240,
+        "wires": [
+            [
+                "7ea42feb9bf027af"
+            ]
+        ]
+    }
+]
+
