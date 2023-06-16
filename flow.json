@@ -82,7 +82,7 @@
         "name": "telit",
         "broker": "mqtt://api-dev.devicewise.com",
         "port": "1883",
-        "clientid": "node-red-5",
+        "clientid": "node-red-1",
         "autoConnect": true,
         "usetls": false,
         "protocolVersion": "4",
@@ -174,7 +174,8 @@
         "y": 120,
         "wires": [
             [
-                "1e2997ff0f3c3dbc"
+                "1e2997ff0f3c3dbc",
+                "b0e0cb373f044df3"
             ]
         ]
     },
@@ -2027,7 +2028,8 @@
         "y": 2040,
         "wires": [
             [
-                "f4483b0b6d808c12"
+                "f4483b0b6d808c12",
+                "b1d4877d7f920b0c"
             ]
         ]
     },
@@ -2101,7 +2103,7 @@
         "type": "function",
         "z": "f15c4f24f8bcd86b",
         "name": "parse",
-        "func": "var cmd = msg.payload.cmd;\nvar key = msg.payload.key;\nmsg.payload = cmd;\nmsg.object = key;\nmsg.cmd = cmd;\nmsg.corrid = cmd;\nreturn msg;",
+        "func": "var key = msg.payload.key;\nif(key == context.global.mac)\n{\n    var cmd = msg.payload.cmd;\n\n    msg.payload = cmd;\n    msg.object = key;\n    msg.cmd = cmd;\n    msg.corrid = cmd;\n    return msg;\n}\nelse\n    return null;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -2136,7 +2138,7 @@
         "type": "debug",
         "z": "f15c4f24f8bcd86b",
         "name": "debug 7",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -2327,6 +2329,79 @@
         "statusType": "auto",
         "x": 1240,
         "y": 2180,
+        "wires": []
+    },
+    {
+        "id": "b1d4877d7f920b0c",
+        "type": "debug",
+        "z": "f15c4f24f8bcd86b",
+        "name": "debug 9",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 300,
+        "y": 1980,
+        "wires": []
+    },
+    {
+        "id": "b0e0cb373f044df3",
+        "type": "exec",
+        "z": "f15c4f24f8bcd86b",
+        "command": "cat /sys/class/net/enp1s0/address | tr -d :",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "ID",
+        "x": 330,
+        "y": 180,
+        "wires": [
+            [
+                "3da2f976dad4f01e"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "3da2f976dad4f01e",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "save mac",
+        "func": "context.global.mac = msg.payload.trim();\nmsg.payload = context.global.mac;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 500,
+        "y": 180,
+        "wires": [
+            [
+                "cd75370db6fdeeba"
+            ]
+        ]
+    },
+    {
+        "id": "cd75370db6fdeeba",
+        "type": "debug",
+        "z": "f15c4f24f8bcd86b",
+        "name": "debug 10",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 680,
+        "y": 180,
         "wires": []
     },
     {
