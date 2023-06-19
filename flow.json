@@ -82,7 +82,7 @@
         "name": "telit",
         "broker": "mqtt://api-dev.devicewise.com",
         "port": "1883",
-        "clientid": "node-red-1",
+        "clientid": "",
         "autoConnect": true,
         "usetls": false,
         "protocolVersion": "4",
@@ -190,8 +190,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1090,
-        "y": 1940,
+        "x": 910,
+        "y": 1840,
         "wires": [
             [
                 "a088e149b7018f28"
@@ -215,8 +215,8 @@
             "c67c5abf149a9862",
             "604ee0cd7dfbae87"
         ],
-        "x": 985,
-        "y": 1940,
+        "x": 725,
+        "y": 1840,
         "wires": [
             [
                 "3c385ffe01e7ea4a"
@@ -415,8 +415,8 @@
         "id": "d770047b31802d6c",
         "type": "function",
         "z": "f15c4f24f8bcd86b",
-        "name": "Band 66",
-        "func": "msg.reply = \"\";\nmsg.payload = \"AT!BAND=06\\r\";\nreturn msg;",
+        "name": "Band 02",
+        "func": "msg.reply = \"\";\nmsg.payload = \"AT!BAND=02\\r\";\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -936,7 +936,7 @@
         "type": "function",
         "z": "f15c4f24f8bcd86b",
         "name": "traffic stats",
-        "func": "msg.payload = JSON.parse(msg.payload);\nvar update = {payload:{}};\nvar now = new Date().getTime();\nvar last = context.global.traffic;\nif (last === undefined) {\n    last = msg.payload;\n    last.time = now;\n\n}\nvar attributes = {};\nattributes.version = \"V8\";\nattributes.ethernet_ip = \"None\";\nattributes.wi_fi_ip = \"None\";\nattributes.cell_ip = \"None\";\nattributes.wi_fi6_ip = \"None\";\n\nvar props = {};\nfor(var index in msg.payload)\n{\n    var name = index;\n    if(index === \"end\") continue;\n    if(index === \"lo\") continue;\n\n    if(index.indexOf(\"enp\") >=0) name = \"ethernet\";\n    else if (index.indexOf(\"wlp2\") >= 0) name = \"wi_fi\";\n    else if (index.indexOf(\"enx\") >= 0) name = \"cell\";\n    else if (index.indexOf(\"wlx\") >= 0) name = \"wi_fi6\";\n\n    if(last[index] === undefined)\n        last[index] = msg.payload[index];\n        \n    var delta = now - last.time;\n    if(delta > 0)\n    {\n        msg.payload[index].drx = msg.payload[index].rx - last[index].rx;\n        msg.payload[index].dtx = msg.payload[index].tx - last[index].tx;\n        attributes[name+\"_ip\"] = msg.payload[index].ip;\n        props[name + \"_rx\"] = Math.round(1000*msg.payload[index].drx/delta);\n        props[name + \"_tx\"] = Math.round(1000*msg.payload[index].dtx/delta);\n    }\n}\nupdate.payload.attributes = attributes;\nupdate.payload.props = props;\n\ncontext.global.traffic = msg.payload;\ncontext.global.traffic.time = now;\n\nupdate.object = msg.payload[\"enp1s0\"].mac;\nupdate.corrId = \"traffic\";\n\nreturn update;",
+        "func": "msg.payload = JSON.parse(msg.payload);\nvar update = {payload:{}};\nvar now = new Date().getTime();\nvar last = context.global.traffic;\nif (last === undefined) {\n    last = msg.payload;\n    last.time = now;\n\n}\nvar attributes = {};\nattributes.version = \"V9\";\nattributes.ethernet_ip = \"None\";\nattributes.wi_fi_ip = \"None\";\nattributes.cell_ip = \"None\";\nattributes.wi_fi6_ip = \"None\";\n\nvar props = {};\nfor(var index in msg.payload)\n{\n    var name = index;\n    if(index === \"end\") continue;\n    if(index === \"lo\") continue;\n\n    if(index.indexOf(\"enp\") >=0) name = \"ethernet\";\n    else if (index.indexOf(\"wlp2\") >= 0) name = \"wi_fi\";\n    else if (index.indexOf(\"enx\") >= 0) name = \"cell\";\n    else if (index.indexOf(\"wlx\") >= 0) name = \"wi_fi6\";\n\n    if(last[index] === undefined)\n        last[index] = msg.payload[index];\n        \n    var delta = now - last.time;\n    if(delta > 0)\n    {\n        msg.payload[index].drx = msg.payload[index].rx - last[index].rx;\n        msg.payload[index].dtx = msg.payload[index].tx - last[index].tx;\n        attributes[name+\"_ip\"] = msg.payload[index].ip;\n        props[name + \"_rx\"] = Math.round(1000*msg.payload[index].drx/delta);\n        props[name + \"_tx\"] = Math.round(1000*msg.payload[index].dtx/delta);\n    }\n}\nupdate.payload.attributes = attributes;\nupdate.payload.props = props;\n\ncontext.global.traffic = msg.payload;\ncontext.global.traffic.time = now;\n\nupdate.object = msg.payload[\"enp1s0\"].mac;\nupdate.corrId = \"traffic\";\n\nreturn update;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -1047,7 +1047,6 @@
         "y": 1520,
         "wires": [
             [
-                "4e08c1b012a301d1",
                 "dd8abc7326ceba32",
                 "cabdde4e08c729c6"
             ]
@@ -1066,7 +1065,7 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 790,
+        "x": 1030,
         "y": 1560,
         "wires": []
     },
@@ -1301,7 +1300,7 @@
         "type": "function",
         "z": "f15c4f24f8bcd86b",
         "name": "Iperf LED",
-        "func": "var status = msg.payload.attributes.iperf;\nvar ifname = msg.payload.attributes.ifname;\nvar led = { payload: \"\" };\nif (status === \"running\")\n    led.payload = \"#3,1,00FF00,0,iperf \" + ifname + \",running,\\n\";\nelse\n    led.payload = \"#3,1,000000,0,iperf,stopped,\\n#2,1,000000,0,Test,none,\\n\";\n\nreturn led;",
+        "func": "var status = msg.payload.attributes.iperf;\nvar ifname = msg.payload.attributes.ifname;\nvar led = { payload: \"\" };\nif (status === \"running\")\n{\n    led.payload = \"#3,1,00FF00,0,iperf \" + ifname + \",running,\\n\";\n    node.status({ fill: \"green\", shape: \"dot\", text: \"running\" });\n}\nelse\n{\n    led.payload = \"#3,1,000000,0,iperf,stopped,\\n#2,1,000000,0,Test,none,\\n\";\n    node.status({ fill: \"grey\", shape: \"dot\", text: \"stopped\" });\n}\n\nreturn led;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -1311,7 +1310,8 @@
         "y": 1520,
         "wires": [
             [
-                "5f6d10753fde112a"
+                "5f6d10753fde112a",
+                "4e08c1b012a301d1"
             ]
         ]
     },
@@ -1395,7 +1395,7 @@
         "type": "function",
         "z": "f15c4f24f8bcd86b",
         "name": "Server IP LEDs",
-        "func": "var status = msg.payload.indexOf(\"1 received\");\nvar led = { payload: \"\" };\nif (status >= 0)\n    led.payload = \"#1,1,00FF00,0,IP \" + msg.ip + \",\" + context.global.server + \" Online,\\n\";\nelse\n    led.payload = \"#1,1,FF0000,0,IP \" + msg.ip + \",\" + context.global.server + \" Offline,\\n\";\n\nreturn led;",
+        "func": "var status = msg.payload.indexOf(\"1 received\");\nvar led = { payload: \"\" };\nif (status >= 0)\n{\n    led.payload = \"#1,1,00FF00,0,IP \" + msg.ip + \",\" + context.global.server + \" Online,\\n\";\n    node.status({ fill: \"green\", shape: \"dot\", text: context.global.server });\n}\nelse\n{\n    led.payload = \"#1,1,FF0000,0,IP \" + msg.ip + \",\" + context.global.server + \" Offline,\\n\";\n    node.status({ fill: \"red\", shape: \"dot\", text: \"offline\" });\n\n}    \nreturn led;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -1672,7 +1672,7 @@
         "type": "function",
         "z": "f15c4f24f8bcd86b",
         "name": "Cell LED",
-        "func": "var status = msg.payload.Mode;\nvar band = msg.payload[\"System Mode\"];\nvar led = { payload: \"\" };\nif (status === \"Online\")\n    led.payload = \"#5,1,00FF00,0,Cell,\" + status + \" \" + band + \",\\n\";\nelse\n    led.payload = \"#5,1,000000,0,Cell,unknown,\\n\";\n\nreturn led;",
+        "func": "var status = msg.payload.Mode;\nvar band = msg.payload[\"System Mode\"];\nvar led = { payload: \"\" };\nif (status === \"Online\")\n{\n    led.payload = \"#5,1,00FF00,0,Cell,\" + status + \" \" + band + \",\\n\";\n    node.status({ fill: \"green\", shape: \"dot\", text: band });\n}\nelse{\n    led.payload = \"#5,1,000000,0,Cell,unknown,\\n\";\n    node.status({ fill: \"grey\", shape: \"dot\", text: \"unknown\" });\n}\n    \n\nreturn led;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -1785,7 +1785,7 @@
         "id": "19152957a554812d",
         "type": "debug",
         "z": "f15c4f24f8bcd86b",
-        "name": "debug 1",
+        "name": "exec",
         "active": false,
         "tosidebar": true,
         "console": false,
@@ -1794,7 +1794,7 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 660,
+        "x": 650,
         "y": 240,
         "wires": []
     },
@@ -1850,12 +1850,13 @@
         "id": "b5fcad83889c3c42",
         "type": "debug",
         "z": "f15c4f24f8bcd86b",
-        "name": "debug 2",
+        "name": "AT reply",
         "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
-        "complete": "false",
+        "complete": "payload",
+        "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
         "x": 780,
@@ -2005,7 +2006,7 @@
         "id": "20766949b8b7a6e0",
         "type": "comment",
         "z": "f15c4f24f8bcd86b",
-        "name": "Version 8",
+        "name": "Version 9",
         "info": "",
         "x": 560,
         "y": 60,
@@ -2047,8 +2048,8 @@
         "correl": "",
         "expiry": "",
         "broker": "95db898f359846ee",
-        "x": 1210,
-        "y": 1940,
+        "x": 1130,
+        "y": 1920,
         "wires": []
     },
     {
@@ -2067,8 +2068,7 @@
         "y": 2040,
         "wires": [
             [
-                "07af99fbc64e2236",
-                "dd052c1c7082eab4"
+                "07af99fbc64e2236"
             ],
             [
                 "dd052c1c7082eab4"
@@ -2121,12 +2121,13 @@
         "id": "b37e81abf3a63aa5",
         "type": "debug",
         "z": "f15c4f24f8bcd86b",
-        "name": "debug 6",
+        "name": "mqtt reply",
         "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
-        "complete": "false",
+        "complete": "payload",
+        "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
         "x": 880,
@@ -2137,12 +2138,13 @@
         "id": "dd052c1c7082eab4",
         "type": "debug",
         "z": "f15c4f24f8bcd86b",
-        "name": "debug 7",
-        "active": true,
+        "name": "mqtt error",
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
-        "complete": "false",
+        "complete": "payload",
+        "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
         "x": 680,
@@ -2154,7 +2156,7 @@
         "type": "function",
         "z": "f15c4f24f8bcd86b",
         "name": "Telit LED",
-        "func": "var led = { payload: \"\" };\nled.payload = \"#4,1,000000,0,Telit,Offline,\\n\";\ntry{\n    var status = msg?.status?.fill;\n\n\n    if(status === \"green\")\n        led.payload = \"#4,1,00FF00,0,Telit,Online,\\n\";\n\n}\ncatch(e)\n{\n    node.warn(e);\n    context.global.telitSessionId = null;\n}\nreturn led;",
+        "func": "var led = { payload: \"\" };\nled.payload = \"#4,1,000000,0,Telit,Offline,\\n\";\ntry{\n    var status = msg?.status?.fill;\n\n\n    if(status === \"green\")\n    {\n        led.payload = \"#4,1,00FF00,0,Telit,Online,\\n\"\n        node.status({ fill: \"green\", shape: \"dot\", text: \"online\" });\n    }\n    else{\n        node.status({ fill: \"red\", shape: \"dot\", text: \"offline\" });\n    }\n\n}\ncatch(e)\n{\n    node.warn(e);\n    context.global.telitSessionId = null;\n}\nreturn led;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -2318,7 +2320,7 @@
         "id": "bbcddea557a659a4",
         "type": "debug",
         "z": "f15c4f24f8bcd86b",
-        "name": "debug 8",
+        "name": "mqtt all",
         "active": false,
         "tosidebar": true,
         "console": false,
@@ -2335,15 +2337,16 @@
         "id": "b1d4877d7f920b0c",
         "type": "debug",
         "z": "f15c4f24f8bcd86b",
-        "name": "debug 9",
-        "active": true,
+        "name": "mqtt command",
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
-        "complete": "false",
+        "complete": "payload",
+        "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 300,
+        "x": 320,
         "y": 1980,
         "wires": []
     },
@@ -2392,17 +2395,159 @@
         "id": "cd75370db6fdeeba",
         "type": "debug",
         "z": "f15c4f24f8bcd86b",
-        "name": "debug 10",
-        "active": true,
+        "name": "Mac id",
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
-        "complete": "false",
+        "complete": "payload",
+        "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 680,
+        "x": 670,
         "y": 180,
         "wires": []
+    },
+    {
+        "id": "e378737ee7438575",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "connect",
+        "func": "msg.action = 'connect'\nmsg.broker = {\n    clientid: 'node-'+context.global.mac\n}\nreturn msg",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 900,
+        "y": 1880,
+        "wires": [
+            [
+                "a088e149b7018f28"
+            ]
+        ]
+    },
+    {
+        "id": "c6012710c5c89e2f",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "disconnect",
+        "func": "msg.action = 'disconnect'\n\nreturn msg",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 570,
+        "y": 1920,
+        "wires": [
+            [
+                "a088e149b7018f28",
+                "265492950454ca88"
+            ]
+        ]
+    },
+    {
+        "id": "071eb4f3df466fc5",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "3",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 410,
+        "y": 1920,
+        "wires": [
+            [
+                "c6012710c5c89e2f"
+            ]
+        ]
+    },
+    {
+        "id": "265492950454ca88",
+        "type": "delay",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "1",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 760,
+        "y": 1880,
+        "wires": [
+            [
+                "e378737ee7438575"
+            ]
+        ]
+    },
+    {
+        "id": "75addabc5349940d",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 900,
+        "wires": [
+            [
+                "925ae0375fa002b3"
+            ]
+        ]
+    },
+    {
+        "id": "925ae0375fa002b3",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Band 66",
+        "func": "msg.reply = \"\";\nmsg.payload = \"AT!BAND=06\\r\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 900,
+        "wires": [
+            [
+                "6875564a8a0cafb1"
+            ]
+        ]
     },
     {
         "id": "42957c37084c9cdf",
