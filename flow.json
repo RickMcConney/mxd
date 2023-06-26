@@ -2606,6 +2606,92 @@
         ]
     },
     {
+        "id": "71ca3754c6aade65",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "function 1",
+        "func": "msg.topic = \"api\";\nmsg.payload = {\n    \"1\": {\n        \"command\": \"thing.find\",\n            \"params\": {\n            \"key\": context.global.mac\n        }\n    }\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 960,
+        "y": 1960,
+        "wires": [
+            [
+                "a088e149b7018f28"
+            ]
+        ]
+    },
+    {
+        "id": "a1cd1159fbdb70e0",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "5",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 810,
+        "y": 1960,
+        "wires": [
+            [
+                "71ca3754c6aade65"
+            ]
+        ]
+    },
+    {
+        "id": "a864446f8bf843ea",
+        "type": "mqtt in",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "topic": "reply",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "95db898f359846ee",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 750,
+        "y": 60,
+        "wires": [
+            [
+                "59e9fb8e333c50fa"
+            ]
+        ]
+    },
+    {
+        "id": "59e9fb8e333c50fa",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "function 2",
+        "func": "var key = msg.payload[1].params.key;\nif(key == context.global.mac)\n{\n    let name = msg.payload[1].params.name;\n    node.status({ fill: \"green\", shape: \"dot\", text: name });\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 920,
+        "y": 60,
+        "wires": [
+            []
+        ]
+    },
+    {
         "id": "42957c37084c9cdf",
         "type": "file",
         "z": "7b027322cdfbb6fc",
