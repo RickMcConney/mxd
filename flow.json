@@ -333,7 +333,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 100,
-        "y": 780,
+        "y": 760,
         "wires": [
             [
                 "2ca4206911762fd0"
@@ -352,7 +352,7 @@
         "finalize": "",
         "libs": [],
         "x": 300,
-        "y": 780,
+        "y": 760,
         "wires": [
             [
                 "6875564a8a0cafb1"
@@ -404,7 +404,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 100,
-        "y": 860,
+        "y": 800,
         "wires": [
             [
                 "d770047b31802d6c"
@@ -423,7 +423,7 @@
         "finalize": "",
         "libs": [],
         "x": 300,
-        "y": 860,
+        "y": 800,
         "wires": [
             [
                 "6875564a8a0cafb1"
@@ -500,7 +500,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 100,
-        "y": 940,
+        "y": 960,
         "wires": [
             [
                 "5f1028caa22e0ea8"
@@ -519,7 +519,7 @@
         "finalize": "",
         "libs": [],
         "x": 300,
-        "y": 940,
+        "y": 960,
         "wires": [
             [
                 "6875564a8a0cafb1"
@@ -786,7 +786,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 90,
-        "y": 1220,
+        "y": 1320,
         "wires": [
             [
                 "f864832dba88db23"
@@ -805,7 +805,7 @@
         "finalize": "",
         "libs": [],
         "x": 280,
-        "y": 1220,
+        "y": 1320,
         "wires": [
             [
                 "1518ecec386b3c66"
@@ -826,7 +826,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 450,
-        "y": 1220,
+        "y": 1320,
         "wires": []
     },
     {
@@ -936,7 +936,7 @@
         "type": "function",
         "z": "f15c4f24f8bcd86b",
         "name": "traffic stats",
-        "func": "msg.payload = JSON.parse(msg.payload);\nvar update = {payload:{}};\nvar now = new Date().getTime();\nvar last = context.global.traffic;\nif (last === undefined) {\n    last = msg.payload;\n    last.time = now;\n\n}\nvar attributes = {};\nattributes.version = \"V1.4\";\nattributes.ethernet_ip = \"None\";\nattributes.wi_fi_ip = \"None\";\nattributes.cell_ip = \"None\";\nattributes.wi_fi6_ip = \"None\";\n\nvar props = {};\nfor(var index in msg.payload)\n{\n    var name = index;\n    if(index === \"end\") continue;\n    if(index === \"lo\") continue;\n\n    if(index.indexOf(\"enp\") >=0) name = \"ethernet\";\n    else if (index.indexOf(\"wlp2\") >= 0) name = \"wi_fi\";\n    else if (index.indexOf(\"enx\") >= 0) name = \"cell\";\n    else if (index.indexOf(\"wlx\") >= 0) name = \"wi_fi6\";\n\n    if(last[index] === undefined)\n        last[index] = msg.payload[index];\n        \n    var delta = now - last.time;\n    if(delta > 0)\n    {\n        msg.payload[index].drx = msg.payload[index].rx - last[index].rx;\n        msg.payload[index].dtx = msg.payload[index].tx - last[index].tx;\n        attributes[name+\"_ip\"] = msg.payload[index].ip;\n        props[name + \"_rx\"] = Math.round(1000*msg.payload[index].drx/delta);\n        props[name + \"_tx\"] = Math.round(1000*msg.payload[index].dtx/delta);\n    }\n}\nupdate.payload.attributes = attributes;\nupdate.payload.props = props;\n\ncontext.global.traffic = msg.payload;\ncontext.global.traffic.time = now;\n\nupdate.object = msg.payload[\"enp1s0\"].mac;\nupdate.corrId = \"traffic\";\n\nreturn update;",
+        "func": "msg.payload = JSON.parse(msg.payload);\nvar update = {payload:{}};\nvar now = new Date().getTime();\nvar last = context.global.traffic;\nif (last === undefined) {\n    last = msg.payload;\n    last.time = now;\n\n}\nvar attributes = {};\nattributes.version = \"V1.5\";\nattributes.ethernet_ip = \"None\";\nattributes.wi_fi_ip = \"None\";\nattributes.cell_ip = \"None\";\nattributes.wi_fi6_ip = \"None\";\n\nvar props = {};\nfor(var index in msg.payload)\n{\n    var name = index;\n    if(index === \"end\") continue;\n    if(index === \"lo\") continue;\n\n    if(index.indexOf(\"enp\") >=0) name = \"ethernet\";\n    else if (index.indexOf(\"wlp2\") >= 0) name = \"wi_fi\";\n    else if (index.indexOf(\"enx\") >= 0) name = \"cell\";\n    else if (index.indexOf(\"wlx\") >= 0) name = \"wi_fi6\";\n\n    if(last[index] === undefined)\n        last[index] = msg.payload[index];\n        \n    var delta = now - last.time;\n    if(delta > 0)\n    {\n        msg.payload[index].drx = msg.payload[index].rx - last[index].rx;\n        msg.payload[index].dtx = msg.payload[index].tx - last[index].tx;\n        attributes[name+\"_ip\"] = msg.payload[index].ip;\n        props[name + \"_rx\"] = Math.round(1000*msg.payload[index].drx/delta);\n        props[name + \"_tx\"] = Math.round(1000*msg.payload[index].dtx/delta);\n    }\n}\nupdate.payload.attributes = attributes;\nupdate.payload.props = props;\n\ncontext.global.traffic = msg.payload;\ncontext.global.traffic.time = now;\n\nupdate.object = msg.payload[\"enp1s0\"].mac;\nupdate.corrId = \"traffic\";\n\nreturn update;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -1152,7 +1152,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 100,
-        "y": 1140,
+        "y": 1200,
         "wires": [
             [
                 "48cd1e55d941362a"
@@ -1171,7 +1171,7 @@
         "finalize": "",
         "libs": [],
         "x": 300,
-        "y": 1140,
+        "y": 1200,
         "wires": [
             [
                 "6875564a8a0cafb1"
@@ -1248,7 +1248,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 100,
-        "y": 1180,
+        "y": 1240,
         "wires": [
             [
                 "f817d61e6e145c6b"
@@ -1267,7 +1267,7 @@
         "finalize": "",
         "libs": [],
         "x": 290,
-        "y": 1180,
+        "y": 1240,
         "wires": [
             [
                 "6875564a8a0cafb1"
@@ -1736,7 +1736,7 @@
         "name": "Run periodic audits",
         "info": "",
         "x": 110,
-        "y": 1320,
+        "y": 1360,
         "wires": []
     },
     {
@@ -2006,7 +2006,7 @@
         "id": "20766949b8b7a6e0",
         "type": "comment",
         "z": "f15c4f24f8bcd86b",
-        "name": "Version 1.4",
+        "name": "Version 1.5",
         "info": "",
         "x": 560,
         "y": 60,
@@ -2523,7 +2523,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 100,
-        "y": 900,
+        "y": 840,
         "wires": [
             [
                 "925ae0375fa002b3"
@@ -2542,7 +2542,7 @@
         "finalize": "",
         "libs": [],
         "x": 300,
-        "y": 900,
+        "y": 840,
         "wires": [
             [
                 "6875564a8a0cafb1"
@@ -2687,6 +2687,194 @@
         "libs": [],
         "x": 920,
         "y": 60,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "eb786669d3714208",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 1120,
+        "wires": [
+            [
+                "21f1cf96f7226d0b"
+            ]
+        ]
+    },
+    {
+        "id": "21f1cf96f7226d0b",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "def band 77",
+        "func": "msg.payload = 'AT!BAND=07,\"5G 77\",0,0,0,0,1000\\r';\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 1120,
+        "wires": [
+            [
+                "6875564a8a0cafb1"
+            ]
+        ]
+    },
+    {
+        "id": "42f53da0862e6e16",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 1160,
+        "wires": [
+            [
+                "2a10ced8c0f1a898"
+            ]
+        ]
+    },
+    {
+        "id": "2a10ced8c0f1a898",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "def band 266",
+        "func": "msg.payload = 'AT!BAND=05,\"5G 266\",0,0,0,0,0,8\\r';\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 1160,
+        "wires": [
+            [
+                "6875564a8a0cafb1"
+            ]
+        ]
+    },
+    {
+        "id": "f81871f9bd1dd825",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 880,
+        "wires": [
+            [
+                "9231dff5b4747af1"
+            ]
+        ]
+    },
+    {
+        "id": "9231dff5b4747af1",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Band 77",
+        "func": "msg.reply = \"\";\nmsg.payload = \"AT!BAND=07\\r\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 880,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "1ff407f1f095818b",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 920,
+        "wires": [
+            [
+                "4b4dbc95a2b01e97"
+            ]
+        ]
+    },
+    {
+        "id": "4b4dbc95a2b01e97",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Band 266",
+        "func": "msg.reply = \"\";\nmsg.payload = \"AT!BAND=05\\r\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 920,
         "wires": [
             []
         ]
