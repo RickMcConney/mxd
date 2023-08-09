@@ -135,7 +135,7 @@
         "type": "function",
         "z": "f15c4f24f8bcd86b",
         "name": "init globals",
-        "func": "\ncontext.global.server = \"10.198.0.132\";\ncontext.global.test = \"none\";\ncontext.global.status = \"unknown\";\ncontext.global.reply = {};\nreturn msg;",
+        "func": "context.global.version = \"V1.11\";\ncontext.global.server = \"10.198.0.132\";\ncontext.global.test = \"none\";\ncontext.global.status = \"unknown\";\ncontext.global.reply = {};\nnode.status({ fill: \"green\", shape: \"dot\", text: context.global.version });\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -333,7 +333,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 100,
-        "y": 760,
+        "y": 740,
         "wires": [
             [
                 "2ca4206911762fd0"
@@ -352,7 +352,7 @@
         "finalize": "",
         "libs": [],
         "x": 300,
-        "y": 760,
+        "y": 740,
         "wires": [
             [
                 "6875564a8a0cafb1"
@@ -404,7 +404,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 100,
-        "y": 800,
+        "y": 780,
         "wires": [
             [
                 "d770047b31802d6c"
@@ -423,7 +423,7 @@
         "finalize": "",
         "libs": [],
         "x": 300,
-        "y": 800,
+        "y": 780,
         "wires": [
             [
                 "6875564a8a0cafb1"
@@ -452,7 +452,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 100,
-        "y": 720,
+        "y": 700,
         "wires": [
             [
                 "dbbc2bc794a6020e"
@@ -471,7 +471,7 @@
         "finalize": "",
         "libs": [],
         "x": 310,
-        "y": 720,
+        "y": 700,
         "wires": [
             [
                 "6875564a8a0cafb1"
@@ -500,7 +500,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 100,
-        "y": 960,
+        "y": 980,
         "wires": [
             [
                 "5f1028caa22e0ea8"
@@ -519,7 +519,7 @@
         "finalize": "",
         "libs": [],
         "x": 300,
-        "y": 960,
+        "y": 980,
         "wires": [
             [
                 "6875564a8a0cafb1"
@@ -936,7 +936,7 @@
         "type": "function",
         "z": "f15c4f24f8bcd86b",
         "name": "traffic stats",
-        "func": "msg.payload = JSON.parse(msg.payload);\nvar update = {payload:{}};\nvar now = new Date().getTime();\nvar last = context.global.traffic;\nif (last === undefined) {\n    last = msg.payload;\n    last.time = now;\n\n}\nvar attributes = {};\nattributes.version = \"V1.10\";\nattributes.ethernet_ip = \"None\";\nattributes.wi_fi_ip = \"None\";\nattributes.cell_ip = \"None\";\nattributes.wi_fi6_ip = \"None\";\n\nvar props = {};\nfor(var index in msg.payload)\n{\n    var name = index;\n    if(index === \"end\") continue;\n    if(index === \"lo\") continue;\n\n    if(index.indexOf(\"enp\") >=0) name = \"ethernet\";\n    else if (index.indexOf(\"wlp2\") >= 0) name = \"wi_fi\";\n    else if (index.indexOf(\"enx\") >= 0) name = \"cell\";\n    else if (index.indexOf(\"wlx\") >= 0) name = \"wi_fi6\";\n\n    if(last[index] === undefined)\n        last[index] = msg.payload[index];\n        \n    var delta = now - last.time;\n    if(delta > 0)\n    {\n        msg.payload[index].drx = msg.payload[index].rx - last[index].rx;\n        msg.payload[index].dtx = msg.payload[index].tx - last[index].tx;\n        attributes[name+\"_ip\"] = msg.payload[index].ip;\n        props[name + \"_rx\"] = Math.round(1000*msg.payload[index].drx/delta);\n        props[name + \"_tx\"] = Math.round(1000*msg.payload[index].dtx/delta);\n    }\n}\nupdate.payload.attributes = attributes;\nupdate.payload.props = props;\n\ncontext.global.traffic = msg.payload;\ncontext.global.traffic.time = now;\n\nupdate.object = msg.payload[\"enp1s0\"].mac;\nupdate.corrId = \"traffic\";\n\nreturn update;",
+        "func": "msg.payload = JSON.parse(msg.payload);\nvar update = {payload:{}};\nvar now = new Date().getTime();\nvar last = context.global.traffic;\nif (last === undefined) {\n    last = msg.payload;\n    last.time = now;\n\n}\nvar attributes = {};\nattributes.version = context.global.version;\nattributes.ethernet_ip = \"None\";\nattributes.wi_fi_ip = \"None\";\nattributes.cell_ip = \"None\";\nattributes.wi_fi6_ip = \"None\";\n\nvar props = {};\nfor(var index in msg.payload)\n{\n    var name = index;\n    if(index === \"end\") continue;\n    if(index === \"lo\") continue;\n\n    if(index.indexOf(\"enp\") >=0) name = \"ethernet\";\n    else if (index.indexOf(\"wlp2\") >= 0) name = \"wi_fi\";\n    else if (index.indexOf(\"enx\") >= 0) name = \"cell\";\n    else if (index.indexOf(\"wlx\") >= 0) name = \"wi_fi6\";\n\n    if(last[index] === undefined)\n        last[index] = msg.payload[index];\n        \n    var delta = now - last.time;\n    if(delta > 0)\n    {\n        msg.payload[index].drx = msg.payload[index].rx - last[index].rx;\n        msg.payload[index].dtx = msg.payload[index].tx - last[index].tx;\n        attributes[name+\"_ip\"] = msg.payload[index].ip;\n        props[name + \"_rx\"] = Math.round(1000*msg.payload[index].drx/delta);\n        props[name + \"_tx\"] = Math.round(1000*msg.payload[index].dtx/delta);\n    }\n}\nupdate.payload.attributes = attributes;\nupdate.payload.props = props;\n\ncontext.global.traffic = msg.payload;\ncontext.global.traffic.time = now;\n\nupdate.object = msg.payload[\"enp1s0\"].mac;\nupdate.corrId = \"traffic\";\n\nreturn update;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -1065,7 +1065,7 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1030,
+        "x": 1070,
         "y": 1560,
         "wires": []
     },
@@ -1104,7 +1104,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 100,
-        "y": 1000,
+        "y": 1060,
         "wires": [
             [
                 "fc569f1a4bb03ab6"
@@ -1123,7 +1123,7 @@
         "finalize": "",
         "libs": [],
         "x": 310,
-        "y": 1000,
+        "y": 1060,
         "wires": [
             [
                 "6875564a8a0cafb1"
@@ -1152,7 +1152,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 100,
-        "y": 1200,
+        "y": 1220,
         "wires": [
             [
                 "48cd1e55d941362a"
@@ -1171,7 +1171,7 @@
         "finalize": "",
         "libs": [],
         "x": 300,
-        "y": 1200,
+        "y": 1220,
         "wires": [
             [
                 "6875564a8a0cafb1"
@@ -1200,7 +1200,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 100,
-        "y": 1040,
+        "y": 1100,
         "wires": [
             [
                 "bdcbb5e5deaf36c7"
@@ -1219,7 +1219,7 @@
         "finalize": "",
         "libs": [],
         "x": 310,
-        "y": 1040,
+        "y": 1100,
         "wires": [
             [
                 "6875564a8a0cafb1"
@@ -1248,7 +1248,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 100,
-        "y": 1240,
+        "y": 1260,
         "wires": [
             [
                 "f817d61e6e145c6b"
@@ -1267,7 +1267,7 @@
         "finalize": "",
         "libs": [],
         "x": 290,
-        "y": 1240,
+        "y": 1260,
         "wires": [
             [
                 "6875564a8a0cafb1"
@@ -1299,14 +1299,14 @@
         "id": "cabdde4e08c729c6",
         "type": "function",
         "z": "f15c4f24f8bcd86b",
-        "name": "Iperf LED",
+        "name": "Iperf LED 3",
         "func": "var status = msg.payload.attributes.iperf;\nvar ifname = msg.payload.attributes.ifname;\nvar led = { payload: \"\" };\nif (status === \"running\")\n{\n    led.payload = \"#3,1,00FF00,0,iperf \" + ifname + \",running,\\n\";\n    node.status({ fill: \"green\", shape: \"dot\", text: \"running \"+ifname });\n}\nelse\n{\n    led.payload = \"#3,1,000000,0,iperf,stopped,\\n#2,1,000000,0,Test,none,\\n\";\n    node.status({ fill: \"grey\", shape: \"dot\", text: \"stopped\" });\n}\n\nreturn led;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 900,
+        "x": 910,
         "y": 1520,
         "wires": [
             [
@@ -1319,14 +1319,14 @@
         "id": "3cfe36627d14dde3",
         "type": "function",
         "z": "f15c4f24f8bcd86b",
-        "name": "test LED",
+        "name": "test LED 2",
         "func": "var test = context.global.test;\n\nvar led = {payload:\"\"};\nif (test !== \"none\")\n    led.payload = \"#2,1,00FF00,0,Test,\"+test+\",\\n\";\nelse\n    led.payload = \"#2,1,000000,0,Test,Unknown,\\n\";\n\nreturn led;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 620,
+        "x": 630,
         "y": 400,
         "wires": [
             [
@@ -1394,7 +1394,7 @@
         "id": "ff774b164b52a7fa",
         "type": "function",
         "z": "f15c4f24f8bcd86b",
-        "name": "Server IP LEDs",
+        "name": "Server IP LED 1",
         "func": "var status = msg.payload.indexOf(\"1 received\");\nvar led = { payload: \"\" };\nif (status >= 0)\n{\n    led.payload = \"#1,1,00FF00,0,IP \" + msg.ip + \",\" + context.global.server + \" Online,\\n\";\n    node.status({ fill: \"green\", shape: \"dot\", text: context.global.server });\n}\nelse\n{\n    led.payload = \"#1,1,FF0000,0,IP \" + msg.ip + \",\" + context.global.server + \" Offline,\\n\";\n    node.status({ fill: \"red\", shape: \"dot\", text: \"offline\" });\n\n}    \nreturn led;",
         "outputs": 1,
         "noerr": 0,
@@ -1494,14 +1494,14 @@
         "id": "76ecae952370bd68",
         "type": "function",
         "z": "f15c4f24f8bcd86b",
-        "name": "test LED",
-        "func": "var test = context.global.test;\n\nvar led = {payload:\"\"};\nif (test !== \"none\")\n    led.payload = \"#2,1,00FF00,0,Test,\"+test+\",\\n\";\nelse\n    led.payload = \"#1,0,000000,0,Test,Off,\\n#2,0,000000,0,Test,Off,\\n#3,0,000000,0,Test,Off,\\n#4,0,000000,0,Test,Off,\\n#5,0,000000,0,Test,Off,\\n\";\n\nreturn led;",
+        "name": "Clear LEDs",
+        "func": "var test = context.global.test;\n\nvar led = {payload:\"\"};\nled.payload = \"#1,1,000000,0,Server,,\\n#2,1,000000,0,Test,,\\n#3,1,000000,0,Iperf,,\\n#4,1,000000,0,Telit,,\\n#5,1,000000,0,Cell,,\\n\";\n\nreturn led;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 540,
+        "x": 550,
         "y": 120,
         "wires": [
             [
@@ -1555,14 +1555,14 @@
             "5f6d10753fde112a",
             "8c5add3032b20d52",
             "52cf9d335f90b2b8",
-            "e577b30fe921bd50"
+            "e577b30fe921bd50",
+            "e12d3494c10a3818"
         ],
-        "x": 875,
+        "x": 905,
         "y": 460,
         "wires": [
             [
-                "ac38d66296b678d9",
-                "a996bbdb6d23f90c"
+                "ac38d66296b678d9"
             ]
         ]
     },
@@ -1622,9 +1622,9 @@
         "id": "ac38d66296b678d9",
         "type": "serial request",
         "z": "f15c4f24f8bcd86b",
-        "name": "serial",
+        "name": "LED Screen",
         "serial": "7c3ae8806aa3856f",
-        "x": 1150,
+        "x": 1050,
         "y": 460,
         "wires": [
             []
@@ -1671,14 +1671,14 @@
         "id": "5c32ba4d7d06f994",
         "type": "function",
         "z": "f15c4f24f8bcd86b",
-        "name": "Cell LED",
+        "name": "Cell LED 5",
         "func": "var status = msg.payload.Mode;\nvar band = msg.payload[\"System Mode\"];\nvar led = { payload: \"\" };\nif (status === \"Online\")\n{\n    led.payload = \"#5,1,00FF00,0,Cell,\" + status + \" \" + band + \",\\n\";\n    node.status({ fill: \"green\", shape: \"dot\", text: band });\n}\nelse{\n    led.payload = \"#5,1,000000,0,Cell,unknown,\\n\";\n    node.status({ fill: \"grey\", shape: \"dot\", text: \"unknown\" });\n}\n    \n\nreturn led;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 980,
+        "x": 990,
         "y": 1020,
         "wires": [
             [
@@ -1820,7 +1820,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 100,
-        "y": 1080,
+        "y": 1020,
         "wires": [
             [
                 "7faccb6fee40cee3"
@@ -1839,7 +1839,7 @@
         "finalize": "",
         "libs": [],
         "x": 310,
-        "y": 1080,
+        "y": 1020,
         "wires": [
             [
                 "6875564a8a0cafb1"
@@ -1944,7 +1944,7 @@
         "type": "function",
         "z": "f15c4f24f8bcd86b",
         "name": "log AT Reply",
-        "func": "context.global.log(\"AT Relpy\", msg.payload);\nreturn msg;",
+        "func": "context.global.log(\"AT Reply\", msg.payload);\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -1976,41 +1976,6 @@
                 "f76ef1bcc56ab53e"
             ]
         ]
-    },
-    {
-        "id": "a996bbdb6d23f90c",
-        "type": "delay",
-        "z": "f15c4f24f8bcd86b",
-        "name": "",
-        "pauseType": "delay",
-        "timeout": "2",
-        "timeoutUnits": "seconds",
-        "rate": "1",
-        "nbRateUnits": "1",
-        "rateUnits": "second",
-        "randomFirst": "1",
-        "randomLast": "5",
-        "randomUnits": "seconds",
-        "drop": false,
-        "allowrate": false,
-        "outputs": 1,
-        "x": 1000,
-        "y": 500,
-        "wires": [
-            [
-                "ac38d66296b678d9"
-            ]
-        ]
-    },
-    {
-        "id": "20766949b8b7a6e0",
-        "type": "comment",
-        "z": "f15c4f24f8bcd86b",
-        "name": "Version 1.10",
-        "info": "",
-        "x": 570,
-        "y": 60,
-        "wires": []
     },
     {
         "id": "4475c9d8348d6fe9",
@@ -2155,14 +2120,14 @@
         "id": "3c8faceecb7670cb",
         "type": "function",
         "z": "f15c4f24f8bcd86b",
-        "name": "Telit LED",
+        "name": "Telit LED 4",
         "func": "var led = { payload: \"\" };\nled.payload = \"#4,1,000000,0,Telit,Offline,\\n\";\ntry{\n    var status = msg?.status?.fill;\n\n\n    if(status === \"green\")\n    {\n        led.payload = \"#4,1,00FF00,0,Telit,Online,\\n\"\n        node.status({ fill: \"green\", shape: \"dot\", text: \"online\" });\n    }\n    else{\n        node.status({ fill: \"red\", shape: \"dot\", text: \"offline\" });\n    }\n\n}\ncatch(e)\n{\n    node.warn(e);\n    context.global.telitSessionId = null;\n}\nreturn led;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 340,
+        "x": 350,
         "y": 2100,
         "wires": [
             [
@@ -2223,9 +2188,7 @@
         "x": 120,
         "y": 1760,
         "wires": [
-            [
-                "e92f1d238b0db4b2"
-            ]
+            []
         ]
     },
     {
@@ -2254,14 +2217,14 @@
         "id": "af4d1d9b1ebf5842",
         "type": "function",
         "z": "f15c4f24f8bcd86b",
-        "name": "Cell LED",
+        "name": "Cell LED 5",
         "func": "var status = msg.payload\n\nvar led = { payload: \"#5,1,000000,0,Cell,unknown,\\n\" };\nif (status == \"\")\n    return led;\n\nreturn null;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 500,
+        "x": 510,
         "y": 1760,
         "wires": [
             [
@@ -2377,7 +2340,7 @@
         "type": "function",
         "z": "f15c4f24f8bcd86b",
         "name": "save mac",
-        "func": "context.global.mac = msg.payload.trim();\nmsg.payload = context.global.mac;\nreturn msg;",
+        "func": "context.global.mac = msg.payload.trim();\nmsg.payload = context.global.mac;\nnode.status({ fill: \"green\", shape: \"dot\", text: context.global.mac });\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -2523,7 +2486,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 100,
-        "y": 840,
+        "y": 860,
         "wires": [
             [
                 "925ae0375fa002b3"
@@ -2542,7 +2505,7 @@
         "finalize": "",
         "libs": [],
         "x": 300,
-        "y": 840,
+        "y": 860,
         "wires": [
             [
                 "6875564a8a0cafb1"
@@ -2609,7 +2572,7 @@
         "id": "71ca3754c6aade65",
         "type": "function",
         "z": "f15c4f24f8bcd86b",
-        "name": "function 1",
+        "name": "get Name",
         "func": "msg.topic = \"api\";\nmsg.payload = {\n    \"1\": {\n        \"command\": \"thing.find\",\n            \"params\": {\n            \"key\": context.global.mac\n        }\n    }\n}\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
@@ -2666,7 +2629,7 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 750,
+        "x": 530,
         "y": 60,
         "wires": [
             [
@@ -2678,17 +2641,19 @@
         "id": "59e9fb8e333c50fa",
         "type": "function",
         "z": "f15c4f24f8bcd86b",
-        "name": "function 2",
-        "func": "\nif (msg.payload[1] && msg.payload[1].params)\n{\n    var key = msg.payload[1].params.key;\n    if(key == context.global.mac)\n    {\n        if(msg.payload[1].params.name)\n        {\n            let name = msg.payload[1].params.name;\n            node.status({ fill: \"green\", shape: \"dot\", text: name });\n        }\n    }\n}\nreturn msg;",
+        "name": "Name LED 0",
+        "func": "\nif (msg.payload[1] && msg.payload[1].params)\n{\n    var key = msg.payload[1].params.key;\n    if(key == context.global.mac)\n    {\n        if(msg.payload[1].params.name)\n        {\n            let name = msg.payload[1].params.name;\n            node.status({ fill: \"green\", shape: \"dot\", text: name });\n            var led = { payload: \"\" };\n   \n            let pad = Math.floor((14-name.length)/2);\n            let spaces =\"\";\n            for(var i = 0;i<pad;i++)\n                spaces+=\" \";\n\n            \n            led.payload = \"#0,1,00ff00,0,\"+spaces+name+spaces+\",,\\n\";\n            return led;\n            \n        }\n    }\n}\nreturn null;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 920,
+        "x": 710,
         "y": 60,
         "wires": [
-            []
+            [
+                "e12d3494c10a3818"
+            ]
         ]
     },
     {
@@ -2713,7 +2678,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 100,
-        "y": 1120,
+        "y": 1140,
         "wires": [
             [
                 "21f1cf96f7226d0b"
@@ -2732,7 +2697,7 @@
         "finalize": "",
         "libs": [],
         "x": 310,
-        "y": 1120,
+        "y": 1140,
         "wires": [
             [
                 "6875564a8a0cafb1"
@@ -2761,7 +2726,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 100,
-        "y": 1160,
+        "y": 1180,
         "wires": [
             [
                 "2a10ced8c0f1a898"
@@ -2780,7 +2745,7 @@
         "finalize": "",
         "libs": [],
         "x": 310,
-        "y": 1160,
+        "y": 1180,
         "wires": [
             [
                 "6875564a8a0cafb1"
@@ -2809,7 +2774,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 100,
-        "y": 880,
+        "y": 900,
         "wires": [
             [
                 "9231dff5b4747af1"
@@ -2828,7 +2793,7 @@
         "finalize": "",
         "libs": [],
         "x": 300,
-        "y": 880,
+        "y": 900,
         "wires": [
             [
                 "6875564a8a0cafb1"
@@ -2857,7 +2822,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 100,
-        "y": 920,
+        "y": 940,
         "wires": [
             [
                 "4b4dbc95a2b01e97"
@@ -2876,7 +2841,7 @@
         "finalize": "",
         "libs": [],
         "x": 300,
-        "y": 920,
+        "y": 940,
         "wires": [
             [
                 "6875564a8a0cafb1"
@@ -2904,7 +2869,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 500,
+        "x": 540,
         "y": 1160,
         "wires": [
             [
@@ -2923,12 +2888,71 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 700,
+        "x": 680,
         "y": 1160,
         "wires": [
             [
                 "6875564a8a0cafb1"
             ]
+        ]
+    },
+    {
+        "id": "e12d3494c10a3818",
+        "type": "link out",
+        "z": "f15c4f24f8bcd86b",
+        "name": "link out 14",
+        "mode": "link",
+        "links": [
+            "126d4b350f3d104e"
+        ],
+        "x": 825,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "69d6dcf9a366211f",
+        "type": "inject",
+        "z": "f15c4f24f8bcd86b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 820,
+        "wires": [
+            [
+                "b4af6ebfec0c8480"
+            ]
+        ]
+    },
+    {
+        "id": "b4af6ebfec0c8480",
+        "type": "function",
+        "z": "f15c4f24f8bcd86b",
+        "name": "Band 46",
+        "func": "msg.reply = \"\";\nmsg.payload = \"AT!BAND=04\\r\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 820,
+        "wires": [
+            []
         ]
     },
     {
