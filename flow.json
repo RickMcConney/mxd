@@ -2642,7 +2642,7 @@
         "type": "function",
         "z": "f15c4f24f8bcd86b",
         "name": "Name LED 0",
-        "func": "\nif (msg.payload[1] && msg.payload[1].params)\n{\n    var key = msg.payload[1].params.key;\n    if(key == context.global.mac)\n    {\n        if(msg.payload[1].params.name)\n        {\n            let name = msg.payload[1].params.name;\n            node.status({ fill: \"green\", shape: \"dot\", text: name });\n            var led = { payload: \"\" };\n   \n            let pad = Math.floor((14-name.length)/2);\n            let spaces =\"\";\n            for(var i = 0;i<pad;i++)\n                spaces+=\" \";\n\n            \n            led.payload = \"#0,1,00ff00,0,\"+spaces+name+spaces+\",,\\n\";\n            return led;\n            \n        }\n    }\n}\nreturn null;",
+        "func": "\nif (msg.payload[1] && msg.payload[1].params)\n{\n    var key = msg.payload[1].params.key;\n    if(key == context.global.mac)\n    {\n        if(msg.payload[1].params.name)\n        {\n            let name = msg.payload[1].params.name;\n            node.status({ fill: \"green\", shape: \"dot\", text: name });\n            var led = { payload: \"\" };\n   \n            let pad = Math.floor((14-name.length)/2);\n            if(pad < 0) pad = 0;\n            let spaces =\"\";\n            for(var i = 0;i<pad;i++)\n                spaces+=\" \";\n\n            \n            led.payload = \"#0,1,00ff00,0,\"+spaces+name+spaces+\",,\\n\";\n            return led;\n            \n        }\n    }\n}\nreturn null;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
