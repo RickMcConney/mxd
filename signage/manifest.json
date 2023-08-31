@@ -1,0 +1,17 @@
+{
+  "name": "AT&T Signage",
+  "description": "Listens for redirect messages",
+  "version": "1.5",
+  "permissions": ["tabs","storage","offscreen"
+],
+  "background": {
+    "service_worker":  "background.js"
+  },
+  "host_permissions": [
+  "http://*/*",
+  "https://*/*"
+],
+  "manifest_version": 3,
+"icons":{ "128": "attglobe.png"},
+"options_page" : "options.html"
+}
